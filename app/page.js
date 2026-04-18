@@ -289,7 +289,7 @@ function InputPanel({ dateKey, dayNum, dow, entry, onUpdate, month, data }) {
   const piStrk = getStreak(data, month.year, month.month, dayNum, "pitches", 30);
   const best = Math.max(swStrk, piStrk);
   return (
-    <div style={{ background: "white", borderRadius: "20px 20px 0 0", padding: "14px 14px 20px", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+    <div style={{ background: "#E5E7EB", borderRadius: "20px 20px 0 0", padding: "14px 14px 20px", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ background: "linear-gradient(135deg, #1D4ED8, #3B82F6)", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 18, fontWeight: 900 }}>{dayNum}</div>
@@ -536,9 +536,7 @@ function RoadmapView({ levels, data }) {
 }
 
 // ════════════════════════════════════════
-// ─── Main App ───
-// ════════════════════════════════════════
-// 変更点: window.storage → useEntries フック（Supabase経由）
+// ─── Main App（Supabase版）───
 // ════════════════════════════════════════
 
 export default function Home() {
@@ -556,7 +554,6 @@ export default function Home() {
   const [showConfetti, setShowConfetti] = useState(false);
   const prevLevelsRef = useRef(null);
 
-  // 初回ロード時にレベルを記録
   useEffect(() => {
     if (!loading && !prevLevelsRef.current) {
       prevLevelsRef.current = calcLevels(data);
@@ -571,7 +568,6 @@ export default function Home() {
   }, [selectedDay, month, tab]);
 
   const upd = useCallback((k, e) => {
-    // レベルアップ検知
     const oldLvls = prevLevelsRef.current || calcLevels(data);
     const tempData = { ...data, [k]: e };
     const newLvls = calcLevels(tempData);
@@ -587,7 +583,6 @@ export default function Home() {
     }
     prevLevelsRef.current = newLvls;
 
-    // Supabase に保存
     saveEntry(k, e);
   }, [data, saveEntry]);
 
