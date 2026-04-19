@@ -317,7 +317,7 @@ function LevelCard({ tl, label, icon, total, unit, streakDays, color, nextIn }) 
       }}>
         {g.emoji} {g.name} Lv.{l}
       </div>
-      <div style={{ fontSize: 20, fontWeight: 900, color, marginTop: 4, lineHeight: 1 }}>
+      <div style={{ fontSize: 32, fontWeight: 900, color, marginTop: 4, lineHeight: 1 }}>
         {total.toLocaleString()}
       </div>
       <div style={{ fontSize: 8, color: "#9CA3AF" }}>{unit}</div>
@@ -552,33 +552,64 @@ function InputPanel({ dateKey, dayNum, dow, entry, onUpdate, month, data }) {
 // ─── Graph View ───
 
 function GraphView({ data, month }) {
-  const dim = new Date(month.year, month.month, 0).getDate();
+  const graphScrollRef = useRef(null);
 
+  // Build 3 months of data (2 previous + current)
   const chartData = useMemo(() => {
-    return Array.from({ length: dim }, (_, i) => {
-      const d = i + 1;
-      const e = data[fmtD(month.year, month.month, d)] || {};
-      return {
-        day: d,
-        swings: e.swings || 0,
-        pitches: e.pitches || 0,
-        bcHits: e.bcHits || 0,
-        bcAtBats: e.bcAtBats || 0,
-        gameHits: e.gameHits || 0,
-        gameAtBats: e.gameAtBats || 0,
-        stars: getDayStars(e),
-      };
-    });
-  }, [data, month, dim]);
+    const result = [];
+    for (let offset = -2; offset <= 0; offset++) {
+      let m = month.month + offset;
+      let y = month.year;
+      if (m < 1) { m += 12; y--; }
+      if (m > 12) { m -= 12; y++; }
+      const dim = new Date(y, m, 0).getDate();
+      for (let d = 1; d <= dim; d++) {
+        const e = data[fmtD(y, m, d)] || {};
+        result.push({
+          label: `${m}/${d}`,
+          month: m,
+          day: d,
+          swings: e.swings || 0,
+          pitches: e.pitches || 0,
+          bcHits: e.bcHits || 0,
+          bcAtBats: e.bcAtBats || 0,
+          gameHits: e.gameHits || 0,
+          gameAtBats: e.gameAtBats || 0,
+          stars: getDayStars(e),
+        bcRate: e.bcAtBats > 0 ? Math.round((e.bcHits || 0) / e.bcAtBats * 100) : 0,
+        });
+      }
+    }
+    return result;
+  }, [data, month]);
+
+  // Daily items (swing/pitch): wide bars, ~7 days visible at a time
+  const dailyDayW = 50;
+  const dailyChartW = chartData.length * dailyDayW + 60;
+
+  // Monthly items (BC/game): thin bars, ~30 days visible at a time
+  const monthlyDayW = 13;
+  const monthlyChartW = chartData.length * monthlyDayW + 60;
+
+  // Auto-scroll to right (today) on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const scrollables = document.querySelectorAll("[data-graph-scroll]");
+      scrollables.forEach(el => {
+        el.scrollLeft = el.scrollWidth;
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [month]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload) return null;
     return (
       <div style={{
         background: "white", borderRadius: 10, padding: "8px 12px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.15)", fontSize: 11
+        boxShadow: "0 2px 10px rgba(0,0,0,0.15)", fontSize: 11, zIndex: 50
       }}>
-        <div style={{ fontWeight: 800, color: "#1E3A5F", marginBottom: 4 }}>{month.month}月{label}日</div>
+        <div style={{ fontWeight: 800, color: "#1E3A5F", marginBottom: 4 }}>{label}</div>
         {payload.map((p, i) => (
           <div key={i} style={{ color: p.color, fontWeight: 700 }}>
             {p.name}: {p.value}
@@ -588,83 +619,96 @@ function GraphView({ data, month }) {
     );
   };
 
+  function ScrollChart({ children, height, wide }) {
+    const w = wide ? dailyChartW : monthlyChartW;
+    const bw = wide ? Math.max(dailyDayW - 16, 8) : Math.max(monthlyDayW - 4, 4);
+    return (
+      <div data-graph-scroll style={{
+        overflowX: "auto", overflowY: "hidden",
+        WebkitOverflowScrolling: "touch",
+        scrollbarWidth: "none", msOverflowStyle: "none",
+        marginBottom: 4,
+      }}>
+        <div style={{ width: w, height }}>
+          <BarChart width={w} height={height} data={chartData} barGap={1} barSize={bw}>
+            {children}
+          </BarChart>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch",
       background: "white", borderRadius: "20px 20px 0 0",
-      boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", padding: "14px 8px 20px"
+      boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", padding: "14px 0 20px"
     }}>
+      {/* Scroll hint */}
+      <div style={{ padding: "0 12px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontSize: 10, color: "#9CA3AF" }}>← スクロールで過去を見る</div>
+        <div style={{ fontSize: 10, color: "#9CA3AF" }}>直近3ヶ月分</div>
+      </div>
+
+      {/* Swing & Pitch - 週間ビュー */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 4 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>
           💥 素振り ＆ ⚾ 投球（日別）
         </div>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={chartData} barGap={1} barSize={6}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-            <XAxis dataKey="day" tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false}
-              interval={Math.floor(dim / 10)} />
-            <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} />
-            <Tooltip content={CustomTooltip} />
-            <ReferenceLine y={50} stroke="#3B82F6" strokeDasharray="4 4" strokeWidth={1.5} />
-            <ReferenceLine y={30} stroke="#DC2626" strokeDasharray="4 4" strokeWidth={1.5} />
-            <Bar dataKey="swings" name="素振り" fill="#3B82F6" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="pitches" name="投球" fill="#DC2626" radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <ScrollChart height={200} wide>
+          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+          <XAxis dataKey="label" tick={{ fontSize: 8, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={0} />
+          <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} />
+          <Tooltip content={CustomTooltip} />
+          <ReferenceLine y={50} stroke="#3B82F6" strokeDasharray="4 4" strokeWidth={1.5} />
+          <ReferenceLine y={30} stroke="#DC2626" strokeDasharray="4 4" strokeWidth={1.5} />
+          <Bar dataKey="swings" name="素振り" fill="#3B82F6" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="pitches" name="投球" fill="#DC2626" radius={[3, 3, 0, 0]} />
+        </ScrollChart>
       </div>
 
+      {/* Stars - 週間ビュー */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 4 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>
           ⭐ 獲得スター（日別）
         </div>
-        <ResponsiveContainer width="100%" height={140}>
-          <BarChart data={chartData} barSize={8}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-            <XAxis dataKey="day" tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false}
-              interval={Math.floor(dim / 10)} />
-            <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30}
-              domain={[0, 10]} />
-            <Tooltip content={CustomTooltip} />
-            <Bar dataKey="stars" name="スター" fill="#F59E0B" radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <ScrollChart height={140} wide>
+          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+          <XAxis dataKey="label" tick={{ fontSize: 8, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={0} />
+          <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} domain={[0, 10]} />
+          <Tooltip content={CustomTooltip} />
+          <Bar dataKey="stars" name="スター" fill="#F59E0B" radius={[3, 3, 0, 0]} />
+        </ScrollChart>
       </div>
 
+      {/* BC - 月間ビュー */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 4 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>
           🎯 バッセン ミート率（日別）
         </div>
-        <ResponsiveContainer width="100%" height={140}>
-          <BarChart data={chartData.map(d => ({
-            ...d,
-            bcRate: d.bcAtBats > 0 ? Math.round(d.bcHits / d.bcAtBats * 100) : 0
-          }))} barSize={8}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-            <XAxis dataKey="day" tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false}
-              interval={Math.floor(dim / 10)} />
-            <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30}
-              domain={[0, 100]} unit="%" />
-            <Tooltip content={CustomTooltip} />
-            <Bar dataKey="bcRate" name="ミート率%" fill="#10B981" radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <ScrollChart height={140} wide={false}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+          <XAxis dataKey="label" tick={{ fontSize: 7, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={4} />
+          <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30}
+            domain={[0, 100]} unit="%" />
+          <Tooltip content={CustomTooltip} />
+          <Bar dataKey="bcRate" name="ミート率%" fill="#10B981" radius={[3, 3, 0, 0]} />
+        </ScrollChart>
       </div>
 
+      {/* Game - 月間ビュー */}
       <div>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 4 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>
           🏟️ 試合 打席・ヒット（日別）
         </div>
-        <ResponsiveContainer width="100%" height={140}>
-          <BarChart data={chartData} barGap={1} barSize={6}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-            <XAxis dataKey="day" tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false}
-              interval={Math.floor(dim / 10)} />
-            <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} />
-            <Tooltip content={CustomTooltip} />
-            <Bar dataKey="gameAtBats" name="打席" fill="#F59E0B" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="gameHits" name="ヒット" fill="#EF4444" radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <ScrollChart height={140} wide={false}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+          <XAxis dataKey="label" tick={{ fontSize: 7, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={4} />
+          <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} />
+          <Tooltip content={CustomTooltip} />
+          <Bar dataKey="gameAtBats" name="打席" fill="#F59E0B" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="gameHits" name="ヒット" fill="#EF4444" radius={[3, 3, 0, 0]} />
+        </ScrollChart>
       </div>
     </div>
   );
@@ -939,31 +983,21 @@ function RoadmapView({ levels, data }) {
                     borderRadius: 2,
                   }} />
 
-                  {/* Base circle */}
-                  <div style={{
-                    width: isCurrent ? 18 : 12,
-                    height: isCurrent ? 18 : 12,
-                    borderRadius: "50%",
-                    background: isCompleted
-                      ? "#FFD700"
-                      : isCurrent
-                        ? cat.color
-                        : "#D1D5DB",
-                    border: isCurrent ? "3px solid white" : "none",
-                    boxShadow: isCurrent ? `0 0 10px ${cat.color}60` : "none",
-                  }} />
+                  {/* Base marker */}
+                  {isCurrent ? (
+                    <div style={{
+                      fontSize: 22,
+                      animation: "playerBounce 1.5s ease-in-out infinite",
+                    }}>
+                      👦
+                    </div>
+                  ) : (
+                    <div style={{
+                      width: 12, height: 12, borderRadius: "50%",
+                      background: isCompleted ? "#FFD700" : "#D1D5DB",
+                    }} />
+                  )}
                 </div>
-
-                {/* Player character at current position */}
-                {isCurrent && (
-                  <div style={{
-                    position: "absolute", top: -28, left: "50%", transform: "translateX(-50%)",
-                    animation: "playerBounce 1.5s ease-in-out infinite",
-                    fontSize: 22,
-                  }}>
-                    ⚾
-                  </div>
-                )}
 
                 {/* Label */}
                 <div style={{
