@@ -1247,7 +1247,7 @@ export default function App() {
           <span style={{ fontSize: 16 }}>⚾</span>
           <div>
             <div style={{ fontSize: 7, letterSpacing: 2, opacity: 0.5 }}>KENTO36 🔥LEVEL UP APP🔥</div>
-            <div style={{ fontSize: 14, fontWeight: 900, lineHeight: 1.1 }}>👦KENTO36🔥レベルUPアプリ🔥</div>
+            <div style={{ fontSize: 13, fontWeight: 900, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>👦KENTO36🔥レベルUPアプリ🔥</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
