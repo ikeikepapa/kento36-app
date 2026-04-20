@@ -1168,7 +1168,6 @@ function RoadmapView({ levels, data }) {
 // ─── Main ───
 
 export default function Home() {
-  export default function Home() {
   const { data, loading, saveEntry } = useEntries();
 
   const [month, setMonth] = useState(() => {
