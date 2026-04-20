@@ -756,17 +756,7 @@ function RoadmapView({ levels, data }) {
   const nextIn = divisor - (achievedDays % divisor);
 
   // Auto scroll to player position
-  useEffect(() => {
-    if (scrollRef.current) {
-      const playerX = (currentGi + fractionBetweenGrades) * stageW + 40;
-      const containerW = scrollRef.current.clientWidth;
-      const scrollPos = Math.max(0, playerX - containerW / 2);
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ left: scrollPos, behavior: "smooth" });
-      }, 300);
-    }
-  }, [activeCat, currentTotal, fractionBetweenGrades]);
-
+  
   // Mountain height for each grade (0 = bottom, 1 = peak)
   const totalG = GRADES.length;
   const stageW = 200;
@@ -780,7 +770,17 @@ function RoadmapView({ levels, data }) {
   }, [achievedDays, divisor]);
 
   const fractionBetweenGrades = ((currentLv - 1) + progressInLevel) / LPG;
-
+  
+useEffect(() => {
+    if (scrollRef.current) {
+      const playerX = (currentGi + fractionBetweenGrades) * stageW + 40;
+      const containerW = scrollRef.current.clientWidth;
+      const scrollPos = Math.max(0, playerX - containerW / 2);
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ left: scrollPos, behavior: "smooth" });
+      }, 300);
+    }
+  }, [activeCat, currentTotal, fractionBetweenGrades]);
   return (
     <div style={{
       flex: 1, display: "flex", flexDirection: "column", overflow: "hidden",
