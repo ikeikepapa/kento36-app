@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import { useEntries } from "@/lib/useEntries";
+
 const GRADES = [
   { name: "アンバー", emoji: "🟠", color: "#D97706" },
   { name: "オパール", emoji: "🤍", color: "#94A3B8" },
@@ -591,16 +591,32 @@ function GraphView({ data, month }) {
   const monthlyDayW = 13;
   const monthlyChartW = chartData.length * monthlyDayW + 60;
 
-  // Auto-scroll to right (today) on mount
+  // Find today's index in chartData
+  const todayIndex = useMemo(() => {
+    const today = new Date();
+    const todayM = today.getMonth() + 1;
+    const todayD = today.getDate();
+    const idx = chartData.findIndex(d => d.month === todayM && d.day === todayD);
+    return idx >= 0 ? idx : chartData.length - 1;
+  }, [chartData]);
+
+  // Auto-scroll to today on mount
   useEffect(() => {
     const timer = setTimeout(() => {
+      // Daily charts (wide) - scroll today to center
+      const dailyScrollPos = Math.max(0, todayIndex * dailyDayW - 150);
+      // Monthly charts - scroll today to center
+      const monthlyScrollPos = Math.max(0, todayIndex * monthlyDayW - 150);
+
       const scrollables = document.querySelectorAll("[data-graph-scroll]");
       scrollables.forEach(el => {
-        el.scrollLeft = el.scrollWidth;
+        const isWide = el.getAttribute("data-graph-wide") === "true";
+        const pos = isWide ? dailyScrollPos : monthlyScrollPos;
+        el.scrollTo({ left: pos, behavior: "smooth" });
       });
     }, 400);
     return () => clearTimeout(timer);
-  }, [month]);
+  }, [month, todayIndex, dailyDayW, monthlyDayW]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload) return null;
@@ -623,7 +639,7 @@ function GraphView({ data, month }) {
     const w = wide ? dailyChartW : monthlyChartW;
     const bw = wide ? Math.max(dailyDayW - 16, 8) : Math.max(monthlyDayW - 4, 4);
     return (
-      <div data-graph-scroll style={{
+      <div data-graph-scroll data-graph-wide={wide ? "true" : "false"} style={{
         overflowX: "auto", overflowY: "hidden",
         WebkitOverflowScrolling: "touch",
         scrollbarWidth: "none", msOverflowStyle: "none",
@@ -738,22 +754,31 @@ function RoadmapView({ levels, data }) {
   const divisor = cat.key === "bc" ? 3 : cat.key === "game" ? 2 : 5;
   const nextIn = divisor - (achievedDays % divisor);
 
-  // Auto scroll to current position
+  // Auto scroll to player position
   useEffect(() => {
     if (scrollRef.current) {
-      const el = scrollRef.current.querySelector(`[data-grade="${currentGi}"]`);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-      }
+      const playerX = (currentGi + fractionBetweenGrades) * stageW + 40;
+      const containerW = scrollRef.current.clientWidth;
+      const scrollPos = Math.max(0, playerX - containerW / 2);
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ left: scrollPos, behavior: "smooth" });
+      }, 300);
     }
-  }, [activeCat, currentTotal]);
+  }, [activeCat, currentTotal, fractionBetweenGrades]);
 
   // Mountain height for each grade (0 = bottom, 1 = peak)
   const totalG = GRADES.length;
-  const stageW = 120;
+  const stageW = 200;
   const mountainH = 500;
   const baseY = mountainH - 20;
   const peakY = 60;
+
+  // Calculate fractional progress between current and next grade
+  const progressInLevel = useMemo(() => {
+    return (achievedDays % divisor) / divisor;
+  }, [achievedDays, divisor]);
+
+  const fractionBetweenGrades = ((currentLv - 1) + progressInLevel) / LPG;
 
   return (
     <div style={{
@@ -797,21 +822,39 @@ function RoadmapView({ levels, data }) {
 
         {/* Current status */}
         <div style={{
-          marginTop: 6, background: "white", borderRadius: 10, padding: "6px 12px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
+          marginTop: 6, background: "white", borderRadius: 10, padding: "8px 12px",
           boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 20 }}>{GRADES[currentGi].emoji}</span>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 900, color: GRADES[currentGi].color }}>
-                {GRADES[currentGi].name} Lv.{currentLv}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 20 }}>{GRADES[currentGi].emoji}</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 900, color: GRADES[currentGi].color }}>
+                  {GRADES[currentGi].name} Lv.{currentLv}
+                </div>
+                <div style={{ fontSize: 9, color: "#9CA3AF" }}>次のレベルまで あと{nextIn}日</div>
               </div>
-              <div style={{ fontSize: 9, color: "#9CA3AF" }}>次のレベルまで あと{nextIn}日</div>
             </div>
+            {currentGi < totalG - 1 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 9, color: "#9CA3AF" }}>次</span>
+                <span style={{ fontSize: 16 }}>{GRADES[Math.min(currentGi + 1, totalG - 1)].emoji}</span>
+              </div>
+            )}
           </div>
-          <div style={{ fontSize: 10, fontWeight: 800, color: "#6B7280" }}>
-            {currentGi + 1}/{totalG}
+          {/* Progress bar toward next grade */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#E5E7EB" }}>
+              <div style={{
+                height: 6, borderRadius: 3,
+                background: `linear-gradient(90deg, ${cat.color}, ${cat.color}CC)`,
+                width: `${Math.round(fractionBetweenGrades * 100)}%`,
+                transition: "width 0.8s ease-out",
+              }} />
+            </div>
+            <div style={{ fontSize: 9, fontWeight: 800, color: cat.color }}>
+              {Math.round(fractionBetweenGrades * 100)}%
+            </div>
           </div>
         </div>
       </div>
@@ -984,19 +1027,12 @@ function RoadmapView({ levels, data }) {
                   }} />
 
                   {/* Base marker */}
-                  {isCurrent ? (
-                    <div style={{
-                      fontSize: 22,
-                      animation: "playerBounce 1.5s ease-in-out infinite",
-                    }}>
-                      👦
-                    </div>
-                  ) : (
-                    <div style={{
-                      width: 12, height: 12, borderRadius: "50%",
-                      background: isCompleted ? "#FFD700" : "#D1D5DB",
-                    }} />
-                  )}
+                  <div style={{
+                    width: isCurrent ? 16 : 12, height: isCurrent ? 16 : 12, borderRadius: "50%",
+                    background: isCompleted ? "#FFD700" : isCurrent ? cat.color : "#D1D5DB",
+                    border: isCurrent ? "2px solid white" : "none",
+                    boxShadow: isCurrent ? `0 0 8px ${cat.color}60` : "none",
+                  }} />
                 </div>
 
                 {/* Label */}
@@ -1031,6 +1067,43 @@ function RoadmapView({ levels, data }) {
               </div>
             );
           })}
+
+          {/* Player character 👦 at fractional position */}
+          {(() => {
+            const nextGi = Math.min(currentGi + 1, totalG - 1);
+            const curX = currentGi * stageW + stageW / 2 + 40;
+            const curY = baseY - (currentGi / (totalG - 1)) * (baseY - peakY);
+            const nextX = nextGi * stageW + stageW / 2 + 40;
+            const nextY = baseY - (nextGi / (totalG - 1)) * (baseY - peakY);
+            const px = curX + (nextX - curX) * fractionBetweenGrades;
+            const py = curY + (nextY - curY) * fractionBetweenGrades;
+            return (
+              <div style={{
+                position: "absolute",
+                left: px - 18,
+                top: py - 52,
+                textAlign: "center",
+                zIndex: 10,
+                transition: "left 1s ease-out, top 1s ease-out",
+              }}>
+                <div style={{
+                  fontSize: 32,
+                  animation: "playerBounce 1.5s ease-in-out infinite",
+                  filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                }}>
+                  👦
+                </div>
+                <div style={{
+                  fontSize: 7, fontWeight: 800, color: "white",
+                  background: cat.color, borderRadius: 4, padding: "1px 4px",
+                  display: "inline-block", marginTop: 0,
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                }}>
+                  {GRADES[currentGi].name} Lv.{currentLv}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Clouds decoration */}
           {[
@@ -1093,26 +1166,35 @@ function RoadmapView({ levels, data }) {
 
 // ─── Main ───
 
-export default function Home() {
-  const { data, loading, saveEntry } = useEntries();
-
+export default function App() {
   const [month, setMonth] = useState(() => {
     const n = new Date();
     return { year: n.getFullYear(), month: n.getMonth() + 1 };
   });
+  const [data, setData] = useState({});
+  const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(() => new Date().getDate());
   const [tab, setTab] = useState("dashboard");
   const scrollRef = useRef(null);
 
-  const [celebration, setCelebration] = useState(null);
+  // Level-up celebration state
+  const [celebration, setCelebration] = useState(null); // { category, prevLevel, newLevel }
   const [showConfetti, setShowConfetti] = useState(false);
   const prevLevelsRef = useRef(null);
 
   useEffect(() => {
-    if (!loading && !prevLevelsRef.current) {
-      prevLevelsRef.current = calcLevels(data);
-    }
-  }, [loading, data]);
+    (async () => {
+      try {
+        const r = await window.storage.get("bq-v3");
+        if (r) {
+          const parsed = JSON.parse(r.value);
+          setData(parsed);
+          prevLevelsRef.current = calcLevels(parsed);
+        }
+      } catch (err) { /* */ }
+      setLoading(false);
+    })();
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -1127,24 +1209,33 @@ export default function Home() {
     }
   }, [selectedDay, month, tab, loading]);
 
+  const save = useCallback(async (d) => {
+    try { await window.storage.set("bq-v3", JSON.stringify(d)); } catch (err) { /* */ }
+  }, []);
+
   const upd = useCallback((k, e) => {
-    const oldLvls = prevLevelsRef.current || calcLevels(data);
-    const tempData = { ...data, [k]: e };
-    const newLvls = calcLevels(tempData);
+    setData(prev => {
+      const next = { ...prev, [k]: e };
+      save(next);
 
-    const cats = ["swing", "pitch", "bc", "game"];
-    for (const cat of cats) {
-      if (newLvls[cat] > oldLvls[cat]) {
-        setCelebration({ category: cat, prevLevel: oldLvls[cat], newLevel: newLvls[cat] });
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3000);
-        break;
+      // Check for level ups
+      const oldLvls = prevLevelsRef.current || calcLevels(prev);
+      const newLvls = calcLevels(next);
+
+      const categories = ["swing", "pitch", "bc", "game"];
+      for (const cat of categories) {
+        if (newLvls[cat] > oldLvls[cat]) {
+          setCelebration({ category: cat, prevLevel: oldLvls[cat], newLevel: newLvls[cat] });
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 3000);
+          break;
+        }
       }
-    }
-    prevLevelsRef.current = newLvls;
+      prevLevelsRef.current = newLvls;
 
-    saveEntry(k, e);
-  }, [data, saveEntry]);
+      return next;
+    });
+  }, [save]);
 
   const chgM = (dir) => {
     setMonth(p => {
