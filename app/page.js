@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { useEntries } from "@/lib/useEntries";
 
 const GRADES = [
   { name: "アンバー", emoji: "🟠", color: "#D97706" },
@@ -1166,35 +1167,27 @@ function RoadmapView({ levels, data }) {
 
 // ─── Main ───
 
-export default function App() {
+export default function Home() {
+  export default function Home() {
+  const { data, loading, saveEntry } = useEntries();
+
   const [month, setMonth] = useState(() => {
     const n = new Date();
     return { year: n.getFullYear(), month: n.getMonth() + 1 };
   });
-  const [data, setData] = useState({});
-  const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(() => new Date().getDate());
   const [tab, setTab] = useState("dashboard");
   const scrollRef = useRef(null);
 
-  // Level-up celebration state
-  const [celebration, setCelebration] = useState(null); // { category, prevLevel, newLevel }
+  const [celebration, setCelebration] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const prevLevelsRef = useRef(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const r = await window.storage.get("bq-v3");
-        if (r) {
-          const parsed = JSON.parse(r.value);
-          setData(parsed);
-          prevLevelsRef.current = calcLevels(parsed);
-        }
-      } catch (err) { /* */ }
-      setLoading(false);
-    })();
-  }, []);
+    if (!loading && !prevLevelsRef.current) {
+      prevLevelsRef.current = calcLevels(data);
+    }
+  }, [loading, data]);
 
   useEffect(() => {
     if (loading) return;
@@ -1209,34 +1202,24 @@ export default function App() {
     }
   }, [selectedDay, month, tab, loading]);
 
-  const save = useCallback(async (d) => {
-    try { await window.storage.set("bq-v3", JSON.stringify(d)); } catch (err) { /* */ }
-  }, []);
-
   const upd = useCallback((k, e) => {
-    setData(prev => {
-      const next = { ...prev, [k]: e };
-      save(next);
+    const oldLvls = prevLevelsRef.current || calcLevels(data);
+    const tempData = { ...data, [k]: e };
+    const newLvls = calcLevels(tempData);
 
-      // Check for level ups
-      const oldLvls = prevLevelsRef.current || calcLevels(prev);
-      const newLvls = calcLevels(next);
-
-      const categories = ["swing", "pitch", "bc", "game"];
-      for (const cat of categories) {
-        if (newLvls[cat] > oldLvls[cat]) {
-          setCelebration({ category: cat, prevLevel: oldLvls[cat], newLevel: newLvls[cat] });
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 3000);
-          break;
-        }
+    const cats = ["swing", "pitch", "bc", "game"];
+    for (const cat of cats) {
+      if (newLvls[cat] > oldLvls[cat]) {
+        setCelebration({ category: cat, prevLevel: oldLvls[cat], newLevel: newLvls[cat] });
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
+        break;
       }
-      prevLevelsRef.current = newLvls;
+    }
+    prevLevelsRef.current = newLvls;
 
-      return next;
-    });
-  }, [save]);
-
+    saveEntry(k, e);
+  }, [data, saveEntry]);
   const chgM = (dir) => {
     setMonth(p => {
       let m = p.month + dir, y = p.year;
