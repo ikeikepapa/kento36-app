@@ -328,8 +328,8 @@ function LevelCard({ tl, label, icon, total, unit, streakDays, color, nextIn }) 
         </div>
       )}
       {nextIn > 0 && (
-        <div style={{ fontSize: 8, color: "#9CA3AF", marginTop: 2 }}>
-          次Lvまで{nextIn}日
+        <div style={{ fontSize: 11, fontWeight: 800, color: "#DC2626", marginTop: 4, background: "#FEF2F2", borderRadius: 6, padding: "2px 6px", display: "inline-block", border: "1px solid #FECACA" }}>
+          あと{nextIn}日でLvUP!
         </div>
       )}
     </div>
