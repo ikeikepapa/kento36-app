@@ -1462,6 +1462,22 @@ export default function Home() {
               <LevelCard tl={levels.swing} label="素振り" icon="💥" total={tSw} unit="回" streakDays={swStreak} color="#3B82F6" nextIn={swNextIn} />
               <LevelCard tl={levels.pitch} label="投球" icon="⚾" total={tPi} unit="球" streakDays={piStreak} color="#DC2626" nextIn={piNextIn} />
             </div>
+        <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+              <div style={{ flex: 1, background: "linear-gradient(135deg, #1E3A8A, #1D4ED8)", borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ fontSize: 20 }}>💥</div>
+                <div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>素振り 次のレベルまで</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: "#FCD34D", lineHeight: 1.1 }}>あと{swNextIn}日！</div>
+                </div>
+              </div>
+              <div style={{ flex: 1, background: "linear-gradient(135deg, #991B1B, #DC2626)", borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ fontSize: 20 }}>⚾</div>
+                <div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>ピッチング 次のレベルまで</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: "#FCD34D", lineHeight: 1.1 }}>あと{piNextIn}日！</div>
+                </div>
+              </div>
+            </div>
             <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
               <div style={{ background: "white", borderRadius: 14, padding: "8px 6px", flex: 1, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center" }}>
                 <div style={{ fontSize: 18 }}>🎯</div>
