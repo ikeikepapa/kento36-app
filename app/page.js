@@ -322,9 +322,8 @@ function LevelCard({ tl, label, icon, total, unit, streakDays, color, nextIn }) 
         {total.toLocaleString()}
       </div>
       <div style={{ fontSize: 8, color: "#9CA3AF" }}>{unit}</div>
-      {streakDays > 0 && (
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#F59E0B", marginTop: 3 }}>
-          🔥 {streakDays}日連続
+{streakDays > 0 && <div style={{ fontSize: 12, fontWeight: 900, color: "#EA580C", marginTop: 4, background: "#FFF7ED", borderRadius: 6, padding: "2px 6px", display: "inline-block" }}>🔥 {streakDays}日連続</div>}
+        
         </div>
       )}
       {nextIn > 0 && (
