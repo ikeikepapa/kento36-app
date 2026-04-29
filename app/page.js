@@ -731,6 +731,126 @@ function GraphView({ data, month }) {
   );
 }
 
+// ─── Streak View ───
+function StreakView({ data, month }) {
+  const today = new Date();
+  const todayY = today.getFullYear();
+  const todayM = today.getMonth() + 1;
+  const todayD = today.getDate();
+
+  const swStreak = getStreak(data, todayY, todayM, todayD, "swings", 50);
+  const piStreak = getStreak(data, todayY, todayM, todayD, "pitches", 30);
+
+  const dim = new Date(month.year, month.month, 0).getDate();
+  const days = Array.from({ length: dim }, (_, i) => {
+    const d = i + 1;
+    const key = fmtD(month.year, month.month, d);
+    const e = data[key] || {};
+    const dow = new Date(month.year, month.month - 1, d).getDay();
+    const isToday = month.year === todayY && month.month === todayM && d === todayD;
+    const isFuture = new Date(month.year, month.month - 1, d) > today;
+    return { d, dow, key, e, isToday, isFuture, swOk: e.swings >= 50, piOk: e.pitches >= 30 };
+  });
+
+  const firstDow = new Date(month.year, month.month - 1, 1).getDay();
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", background: "white", borderRadius: "20px 20px 0 0", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", padding: "16px 12px 20px" }}>
+
+      {/* Streak cards */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        <div style={{ flex: 1, background: swStreak > 0 ? "linear-gradient(135deg, #EFF6FF, #DBEAFE)" : "#F9FAFB", borderRadius: 14, padding: "12px 8px", textAlign: "center", border: swStreak > 0 ? "1.5px solid #93C5FD" : "1.5px solid #E5E7EB" }}>
+          <div style={{ fontSize: 22 }}>💥</div>
+          <div style={{ fontSize: 11, fontWeight: 900, color: "#1E3A5F", marginTop: 2 }}>素振り</div>
+          <div style={{ fontSize: 36, fontWeight: 900, color: "#3B82F6", lineHeight: 1.1, marginTop: 4 }}>{swStreak}</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: "#1E3A5F" }}>日連続！</div>
+          <div style={{ marginTop: 4, display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>
+            {Array.from({ length: Math.min(swStreak, 20) }, (_, i) => (
+              <span key={i} style={{ fontSize: 13 }}>🔥</span>
+            ))}
+          </div>
+        </div>
+        <div style={{ flex: 1, background: piStreak > 0 ? "linear-gradient(135deg, #FEF2F2, #FECACA)" : "#F9FAFB", borderRadius: 14, padding: "12px 8px", textAlign: "center", border: piStreak > 0 ? "1.5px solid #FCA5A5" : "1.5px solid #E5E7EB" }}>
+          <div style={{ fontSize: 22 }}>⚾</div>
+          <div style={{ fontSize: 11, fontWeight: 900, color: "#1E3A5F", marginTop: 2 }}>ピッチング</div>
+          <div style={{ fontSize: 36, fontWeight: 900, color: "#DC2626", lineHeight: 1.1, marginTop: 4 }}>{piStreak}</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: "#1E3A5F" }}>日連続！</div>
+          <div style={{ marginTop: 4, display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>
+            {Array.from({ length: Math.min(piStreak, 20) }, (_, i) => (
+              <span key={i} style={{ fontSize: 13 }}>🔥</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Calendar header */}
+      <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8 }}>
+        📅 {month.month}月の達成カレンダー
+      </div>
+
+      {/* Day of week header */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
+        {DOW.map((d, i) => (
+          <div key={i} style={{ textAlign: "center", fontSize: 9, fontWeight: 700, color: i === 0 ? "#EF4444" : i === 6 ? "#3B82F6" : "#9CA3AF" }}>{d}</div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+        {Array.from({ length: firstDow }, (_, i) => (
+          <div key={`empty-${i}`} />
+        ))}
+
+        {days.map(({ d, dow, e, isToday, isFuture, swOk, piOk }) => {
+          const anyOk = swOk || piOk;
+          const bothOk = swOk && piOk;
+          return (
+            <div key={d} style={{
+              borderRadius: 10, padding: "4px 2px", textAlign: "center",
+              background: isToday ? "linear-gradient(135deg, #1D4ED8, #3B82F6)" : bothOk ? "linear-gradient(135deg, #FEF3C7, #FFFBEB)" : anyOk ? "#F0FDF4" : isFuture ? "#FAFAFA" : "white",
+              border: isToday ? "2px solid #1D4ED8" : bothOk ? "1.5px solid #FBBF24" : anyOk ? "1.5px solid #BBF7D0" : "1.5px solid #F3F4F6",
+              opacity: isFuture ? 0.4 : 1,
+              minHeight: 56,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: isToday ? "white" : dow === 0 ? "#EF4444" : dow === 6 ? "#3B82F6" : "#374151" }}>{d}</div>
+
+              {!isFuture && (
+                <div style={{ marginTop: 2 }}>
+                  <div style={{ fontSize: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
+                    <span>💥</span>
+                    <span style={{ color: isToday ? "white" : swOk ? "#3B82F6" : "#D1D5DB", fontWeight: 800, fontSize: 9 }}>
+                      {swOk ? "🔥" : "−"}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
+                    <span>⚾</span>
+                    <span style={{ color: isToday ? "white" : piOk ? "#DC2626" : "#D1D5DB", fontWeight: 800, fontSize: 9 }}>
+                      {piOk ? "🔥" : "−"}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 12 }}>
+        <div style={{ fontSize: 9, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 }}>
+          <span>💥</span> 素振り50回以上
+        </div>
+        <div style={{ fontSize: 9, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 }}>
+          <span>⚾</span> ピッチング30球以上
+        </div>
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 4 }}>
+        <div style={{ fontSize: 9, color: "#6B7280" }}>🔥 = 達成！</div>
+        <div style={{ fontSize: 9, color: "#6B7280" }}>− = 未達成</div>
+      </div>
+    </div>
+  );
+}
 // ─── Roadmap View ───
 
 function RoadmapView({ levels, data }) {
@@ -1319,6 +1439,7 @@ export default function Home() {
         {[
           { id: "dashboard", label: "📊 ダッシュボード" },
           { id: "graph", label: "📈 グラフ" },
+          { id: "streak", label: "🔥 ストリーク" },
           { id: "roadmap", label: "🗺️ ロードマップ" },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
@@ -1417,7 +1538,8 @@ export default function Home() {
         <GraphView data={data} month={month} />
       )}
 
-      {tab === "roadmap" && (
+{tab === "streak" && <StreakView data={data} month={month} />}     
+{tab === "roadmap" && (
         <RoadmapView levels={levels} data={data} />
       )}
     </div>
