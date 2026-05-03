@@ -447,12 +447,10 @@ function DayCard({ dateKey, dayNum, dow, entry, isSelected, onSelect }) {
           width: 8, height: 8, borderRadius: 4,
           background: e.pitches >= 30 ? "#DC2626" : e.pitches > 0 ? "#FCA5A5" : (isSelected ? "rgba(255,255,255,0.3)" : "#E5E7EB")
         }} />
-        {isWeekend && (
-          <div style={{
+       <div style={{
             width: 8, height: 8, borderRadius: 4,
             background: e.gameAtBats > 0 ? "#F59E0B" : (isSelected ? "rgba(255,255,255,0.3)" : "#E5E7EB")
           }} />
-        )}
       </div>
       {stars > 0 && !isSelected && (
         <div style={{ fontSize: 8, marginTop: 3 }}>{"⭐".repeat(Math.min(stars, 3))}</div>
