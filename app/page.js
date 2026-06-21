@@ -302,7 +302,8 @@ function Ring({ value, max, size = 28, stroke = 3, color }) {
   );
 }
 
-function LevelCard({ tl, label, icon, total, unit, streakDays, color, nextIn }) {
+<div style={{ fontSize: 8, color: "#9CA3AF" }}>{unit}</div>       {monthTotal !== undefined && <div style={{ fontSize: 10, fontWeight: 700, color: "#9CA3AF", marginTop: 2 }}>今月 {monthTotal.toLocaleString()}{unit}</div>}
+      {monthTotal !== undefined && <div style={{ fontSize: 10, fontWeight: 700, color: "#9CA3AF", marginTop: 2 }}>今月 {monthTotal.toLocaleString()}{unit}</div>}
   const { g, l } = gradeLevel(tl);
   return (
     <div style={{
@@ -321,7 +322,7 @@ function LevelCard({ tl, label, icon, total, unit, streakDays, color, nextIn }) 
       <div style={{ fontSize: 32, fontWeight: 900, color, marginTop: 4, lineHeight: 1 }}>
         {total.toLocaleString()}
       </div>
-      <div style={{ fontSize: 8, color: "#9CA3AF" }}>{unit}</div>
+      <div style={{ fontSize: 8, color: "#9CA3AF" }}>{unit}</div>       {monthTotal !== undefined && <div style={{ fontSize: 10, fontWeight: 700, color: "#9CA3AF", marginTop: 2 }}>今月 {monthTotal.toLocaleString()}{unit}</div>}
       {streakDays > 0 && (
         <div style={{ fontSize: 12, fontWeight: 900, color: "#EA580C", marginTop: 4, background: "#FFF7ED", borderRadius: 6, padding: "2px 6px", display: "inline-block" }}>
           🔥 {streakDays}日連続
@@ -1450,8 +1451,8 @@ export default function Home() {
         <>
           <div style={{ flexShrink: 0, padding: "8px 8px 0", background: "#B91C1C" }}>
             <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-              <LevelCard tl={levels.swing} label="素振り" icon="💥" total={tSw} unit="回" streakDays={swStreak} color="#3B82F6" nextIn={swNextIn} />
-              <LevelCard tl={levels.pitch} label="投球" icon="⚾" total={tPi} unit="球" streakDays={piStreak} color="#DC2626" nextIn={piNextIn} />
+              <LevelCard tl={levels.swing} label="素振り" icon="💥" total={Object.values(data).reduce((s, e) => s + (e.swings || 0), 0)} unit="回" monthTotal={tSw} streakDays={swStreak} color="#3B82F6" nextIn={swNextIn} />
+              <LevelCard tl={levels.pitch} label="投球" icon="⚾" total={Object.values(data).reduce((s, e) => s + (e.pitches || 0), 0)} unit="球" monthTotal={tPi} streakDays={piStreak} color="#DC2626" nextIn={piNextIn} />
             </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
               <div style={{ flex: 1, background: "linear-gradient(135deg, #1E3A8A, #1D4ED8)", borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }}>
