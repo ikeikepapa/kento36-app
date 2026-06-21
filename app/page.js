@@ -28,14 +28,8 @@ const GRADES = [
 const LPG = 2;
 const DOW = ["日", "月", "火", "水", "木", "金", "土"];
 
-function fmtD(y, m, d) {
-  return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-}
-
-function gradeLevel(tl) {
-  const gi = Math.min(Math.floor(tl / LPG), GRADES.length - 1);
-  return { g: GRADES[gi], l: (tl % LPG) + 1 };
-}
+function fmtD(y, m, d) { return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`; }
+function gradeLevel(tl) { const gi = Math.min(Math.floor(tl / LPG), GRADES.length - 1); return { g: GRADES[gi], l: (tl % LPG) + 1 }; }
 
 function getDayStars(e) {
   if (!e) return 0;
@@ -60,46 +54,30 @@ function getStreak(data, year, month, day, field, threshold) {
 }
 
 function calcTotal(data, month, field) {
-  let t = 0;
-  const dim = new Date(month.year, month.month, 0).getDate();
-  for (let d = 1; d <= dim; d++) {
-    const k = fmtD(month.year, month.month, d);
-    if (data[k]) t += data[k][field] || 0;
-  }
+  let t = 0; const dim = new Date(month.year, month.month, 0).getDate();
+  for (let d = 1; d <= dim; d++) { const k = fmtD(month.year, month.month, d); if (data[k]) t += data[k][field] || 0; }
   return t;
 }
 
 function countOver(data, month, field, th) {
-  let c = 0;
-  const dim = new Date(month.year, month.month, 0).getDate();
-  for (let d = 1; d <= dim; d++) {
-    if (data[fmtD(month.year, month.month, d)]?.[field] >= th) c++;
-  }
+  let c = 0; const dim = new Date(month.year, month.month, 0).getDate();
+  for (let d = 1; d <= dim; d++) { if (data[fmtD(month.year, month.month, d)]?.[field] >= th) c++; }
   return c;
 }
 
 function calcAvg(data, month, f) {
-  let h = 0, a = 0;
-  const dim = new Date(month.year, month.month, 0).getDate();
-  for (let d = 1; d <= dim; d++) {
-    const e = data[fmtD(month.year, month.month, d)];
-    if (e && e[f + "AtBats"] > 0) { h += e[f + "Hits"] || 0; a += e[f + "AtBats"] || 0; }
-  }
+  let h = 0, a = 0; const dim = new Date(month.year, month.month, 0).getDate();
+  for (let d = 1; d <= dim; d++) { const e = data[fmtD(month.year, month.month, d)]; if (e && e[f + "AtBats"] > 0) { h += e[f + "Hits"] || 0; a += e[f + "AtBats"] || 0; } }
   return a > 0 ? h / a : null;
 }
 
 function getCurrentStreak(data, month, field, threshold) {
-  const today = new Date();
-  let d, m, y;
-  if (month.year === today.getFullYear() && month.month === today.getMonth() + 1) {
-    d = today.getDate(); m = month.month; y = month.year;
-  } else {
-    d = new Date(month.year, month.month, 0).getDate(); m = month.month; y = month.year;
-  }
+  const today = new Date(); let d, m, y;
+  if (month.year === today.getFullYear() && month.month === today.getMonth() + 1) { d = today.getDate(); m = month.month; y = month.year; }
+  else { d = new Date(month.year, month.month, 0).getDate(); m = month.month; y = month.year; }
   return getStreak(data, y, m, d, field, threshold);
 }
 
-// ─── Level calculation from ALL data ───
 function calcLevels(data) {
   let swDays = 0, piDays = 0, bcSessions = 0, gameSessions = 0;
   for (const key of Object.keys(data)) {
@@ -109,56 +87,20 @@ function calcLevels(data) {
     if (e.bcAtBats > 0) bcSessions++;
     if (e.gameAtBats > 0) gameSessions++;
   }
-  return {
-    swing: Math.floor(swDays / 5),
-    pitch: Math.floor(piDays / 5),
-    bc: Math.floor(bcSessions / 3),
-    game: Math.floor(gameSessions / 2),
-  };
+  return { swing: Math.floor(swDays / 5), pitch: Math.floor(piDays / 5), bc: Math.floor(bcSessions / 3), game: Math.floor(gameSessions / 2) };
 }
 
 // ─── Confetti ───
 function Confetti({ active }) {
   if (!active) return null;
-
   const pieces = useMemo(() => {
     const colors = ["#DC2626", "#3B82F6", "#FBBF24", "#10B981", "#F97316", "#8B5CF6", "#EC4899"];
-    return Array.from({ length: 60 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      delay: Math.random() * 0.8,
-      dur: 1.5 + Math.random() * 1.5,
-      size: 6 + Math.random() * 8,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      rotation: Math.random() * 360,
-      drift: (Math.random() - 0.5) * 40,
-      shape: Math.random() > 0.5 ? "rect" : "circle",
-    }));
+    return Array.from({ length: 60 }, (_, i) => ({ id: i, x: Math.random() * 100, delay: Math.random() * 0.8, dur: 1.5 + Math.random() * 1.5, size: 6 + Math.random() * 8, color: colors[Math.floor(Math.random() * colors.length)], rotation: Math.random() * 360, drift: (Math.random() - 0.5) * 40, shape: Math.random() > 0.5 ? "rect" : "circle" }));
   }, []);
-
   return (
-    <div style={{
-      position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 100
-    }}>
-      <style>{`
-        @keyframes confettiFall {
-          0% { transform: translateY(-20px) translateX(0px) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(110vh) translateX(var(--drift)) rotate(720deg); opacity: 0; }
-        }
-      `}</style>
-      {pieces.map(p => (
-        <div key={p.id} style={{
-          position: "absolute",
-          left: `${p.x}%`,
-          top: -20,
-          width: p.shape === "rect" ? p.size : p.size,
-          height: p.shape === "rect" ? p.size * 0.6 : p.size,
-          borderRadius: p.shape === "circle" ? "50%" : 2,
-          background: p.color,
-          animation: `confettiFall ${p.dur}s ease-in ${p.delay}s forwards`,
-          "--drift": `${p.drift}px`,
-        }} />
-      ))}
+    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 100 }}>
+      <style>{`@keyframes confettiFall { 0% { transform: translateY(-20px) translateX(0px) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) translateX(var(--drift)) rotate(720deg); opacity: 0; } }`}</style>
+      {pieces.map(p => (<div key={p.id} style={{ position: "absolute", left: `${p.x}%`, top: -20, width: p.size, height: p.shape === "rect" ? p.size * 0.6 : p.size, borderRadius: p.shape === "circle" ? "50%" : 2, background: p.color, animation: `confettiFall ${p.dur}s ease-in ${p.delay}s forwards`, "--drift": `${p.drift}px` }} />))}
     </div>
   );
 }
@@ -166,120 +108,23 @@ function Confetti({ active }) {
 // ─── Level Up Celebration Card ───
 function LevelUpCard({ show, category, prevLevel, newLevel, onClose }) {
   if (!show) return null;
-
-  const prev = gradeLevel(prevLevel);
-  const next = gradeLevel(newLevel);
-  const isGradeUp = prev.g.name !== next.g.name;
-
-  const icons = { swing: "💥", pitch: "⚾", bc: "🎯", game: "🏟️" };
-  const labels = { swing: "素振り", pitch: "投球", bc: "バッセン", game: "試合" };
-
+  const prev = gradeLevel(prevLevel); const next = gradeLevel(newLevel); const isGradeUp = prev.g.name !== next.g.name;
+  const icons = { swing: "💥", pitch: "⚾", bc: "🎯", game: "🏟️" }; const labels = { swing: "素振り", pitch: "投球", bc: "バッセン", game: "試合" };
   return (
-    <div style={{
-      position: "absolute", inset: 0, zIndex: 99,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
-    }} onClick={onClose}>
-      <style>{`
-        @keyframes cardBounce {
-          0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
-          50% { transform: scale(1.1) rotate(2deg); opacity: 1; }
-          70% { transform: scale(0.95) rotate(-1deg); }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        @keyframes starBurst {
-          0% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(1.3); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
-      <div onClick={e => e.stopPropagation()} style={{
-        background: "linear-gradient(135deg, #1E3A8A, #1D4ED8, #DC2626)",
-        borderRadius: 24, padding: 4, width: 300,
-        animation: "cardBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
-      }}>
-        <div style={{
-          background: "white", borderRadius: 20, padding: "28px 20px", textAlign: "center"
-        }}>
-          {/* Icon */}
-          <div style={{
-            fontSize: 56,
-            animation: "starBurst 0.5s ease-out 0.3s both",
-          }}>
-            {icons[category]}
-          </div>
-
-          {/* Title */}
-          <div style={{
-            fontSize: 22, fontWeight: 900, color: "#1E3A5F", marginTop: 8,
-            background: isGradeUp
-              ? "linear-gradient(90deg, #DC2626, #F59E0B, #3B82F6, #DC2626)"
-              : "linear-gradient(90deg, #1D4ED8, #3B82F6, #1D4ED8)",
-            backgroundSize: "200% auto",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            animation: "shimmer 2s linear infinite",
-          }}>
-            {isGradeUp ? "🎉 昇格！🎉" : "⬆️ レベルアップ！"}
-          </div>
-
-          {/* Category */}
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#6B7280", marginTop: 4 }}>
-            {labels[category]}
-          </div>
-
-          {/* Level transition */}
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            gap: 12, marginTop: 16
-          }}>
-            <div style={{
-              background: "#F3F4F6", borderRadius: 12, padding: "8px 14px",
-              opacity: 0.6
-            }}>
-              <div style={{ fontSize: 11, color: "#9CA3AF" }}>Before</div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: prev.g.color }}>
-                {prev.g.emoji} {prev.g.name} Lv.{prev.l}
-              </div>
-            </div>
-
+    <div style={{ position: "absolute", inset: 0, zIndex: 99, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <style>{`@keyframes cardBounce { 0% { transform: scale(0.3) rotate(-10deg); opacity: 0; } 50% { transform: scale(1.1) rotate(2deg); opacity: 1; } 70% { transform: scale(0.95) rotate(-1deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } } @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } } @keyframes starBurst { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }`}</style>
+      <div onClick={e => e.stopPropagation()} style={{ background: "linear-gradient(135deg, #1E3A8A, #1D4ED8, #DC2626)", borderRadius: 24, padding: 4, width: 300, animation: "cardBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
+        <div style={{ background: "white", borderRadius: 20, padding: "28px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 56, animation: "starBurst 0.5s ease-out 0.3s both" }}>{icons[category]}</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: "#1E3A5F", marginTop: 8, background: isGradeUp ? "linear-gradient(90deg, #DC2626, #F59E0B, #3B82F6, #DC2626)" : "linear-gradient(90deg, #1D4ED8, #3B82F6, #1D4ED8)", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 2s linear infinite" }}>{isGradeUp ? "🎉 昇格！🎉" : "⬆️ レベルアップ！"}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#6B7280", marginTop: 4 }}>{labels[category]}</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 16 }}>
+            <div style={{ background: "#F3F4F6", borderRadius: 12, padding: "8px 14px", opacity: 0.6 }}><div style={{ fontSize: 11, color: "#9CA3AF" }}>Before</div><div style={{ fontSize: 14, fontWeight: 800, color: prev.g.color }}>{prev.g.emoji} {prev.g.name} Lv.{prev.l}</div></div>
             <div style={{ fontSize: 24, color: "#F59E0B" }}>→</div>
-
-            <div style={{
-              background: "linear-gradient(135deg, #FFFBEB, #FEF3C7)",
-              borderRadius: 12, padding: "8px 14px",
-              border: "2px solid #FBBF24",
-              animation: "starBurst 0.5s ease-out 0.5s both",
-            }}>
-              <div style={{ fontSize: 11, color: "#92400E" }}>New!</div>
-              <div style={{ fontSize: 16, fontWeight: 900, color: next.g.color }}>
-                {next.g.emoji} {next.g.name} Lv.{next.l}
-              </div>
-            </div>
+            <div style={{ background: "linear-gradient(135deg, #FFFBEB, #FEF3C7)", borderRadius: 12, padding: "8px 14px", border: "2px solid #FBBF24", animation: "starBurst 0.5s ease-out 0.5s both" }}><div style={{ fontSize: 11, color: "#92400E" }}>New!</div><div style={{ fontSize: 16, fontWeight: 900, color: next.g.color }}>{next.g.emoji} {next.g.name} Lv.{next.l}</div></div>
           </div>
-
-          {/* Next goal */}
-          <div style={{
-            marginTop: 16, fontSize: 11, color: "#9CA3AF",
-            background: "#F9FAFB", borderRadius: 8, padding: "6px 10px"
-          }}>
-            次のレベルまであと少し！がんばれ！💪
-          </div>
-
-          {/* Close button */}
-          <button onClick={onClose} style={{
-            marginTop: 16, background: "linear-gradient(135deg, #1D4ED8, #3B82F6)",
-            border: "none", borderRadius: 12, padding: "10px 32px",
-            color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(29,78,216,0.3)"
-          }}>
-            OK！💪
-          </button>
+          <div style={{ marginTop: 16, fontSize: 11, color: "#9CA3AF", background: "#F9FAFB", borderRadius: 8, padding: "6px 10px" }}>次のレベルまであと少し！がんばれ！💪</div>
+          <button onClick={onClose} style={{ marginTop: 16, background: "linear-gradient(135deg, #1D4ED8, #3B82F6)", border: "none", borderRadius: 12, padding: "10px 32px", color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 12px rgba(29,78,216,0.3)" }}>OK！💪</button>
         </div>
       </div>
     </div>
@@ -287,232 +132,87 @@ function LevelUpCard({ show, category, prevLevel, newLevel, onClose }) {
 }
 
 // ─── Small Components ───
-
 function Ring({ value, max, size = 28, stroke = 3, color }) {
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const p = Math.min(value / max, 1);
-  return (
-    <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E5E7EB" strokeWidth={stroke} />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-        strokeDasharray={c} strokeDashoffset={c * (1 - p)} strokeLinecap="round"
-        style={{ transition: "stroke-dashoffset 0.5s" }} />
-    </svg>
-  );
+  const r = (size - stroke) / 2; const c = 2 * Math.PI * r; const p = Math.min(value / max, 1);
+  return (<svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}><circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E5E7EB" strokeWidth={stroke} /><circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={c} strokeDashoffset={c * (1 - p)} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.5s" }} /></svg>);
 }
 
-<div style={{ fontSize: 8, color: "#9CA3AF" }}>{unit}</div>       {monthTotal !== undefined && <div style={{ fontSize: 10, fontWeight: 700, color: "#9CA3AF", marginTop: 2 }}>今月 {monthTotal.toLocaleString()}{unit}</div>}
-      {monthTotal !== undefined && <div style={{ fontSize: 10, fontWeight: 700, color: "#9CA3AF", marginTop: 2 }}>今月 {monthTotal.toLocaleString()}{unit}</div>}
+function LevelCard({ tl, label, icon, total, unit, streakDays, color, nextIn, monthTotal }) {
   const { g, l } = gradeLevel(tl);
   return (
-    <div style={{
-      background: "white", borderRadius: 16, padding: "10px 8px", flex: 1,
-      boxShadow: "0 2px 8px rgba(0,0,0,0.06)", minWidth: 0, textAlign: "center"
-    }}>
+    <div style={{ background: "white", borderRadius: 16, padding: "10px 8px", flex: 1, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", minWidth: 0, textAlign: "center" }}>
       <div style={{ fontSize: 24 }}>{icon}</div>
       <div style={{ fontSize: 10, fontWeight: 800, color: "#1E3A5F", marginTop: 2 }}>{label}</div>
-      <div style={{
-        background: `${color}15`, border: `1.5px solid ${color}40`,
-        borderRadius: 8, padding: "2px 5px", marginTop: 3,
-        fontSize: 9, fontWeight: 800, color, display: "inline-block"
-      }}>
-        {g.emoji} {g.name} Lv.{l}
-      </div>
-      <div style={{ fontSize: 32, fontWeight: 900, color, marginTop: 4, lineHeight: 1 }}>
-        {total.toLocaleString()}
-      </div>
-      <div style={{ fontSize: 8, color: "#9CA3AF" }}>{unit}</div>       {monthTotal !== undefined && <div style={{ fontSize: 10, fontWeight: 700, color: "#9CA3AF", marginTop: 2 }}>今月 {monthTotal.toLocaleString()}{unit}</div>}
-      {streakDays > 0 && (
-        <div style={{ fontSize: 12, fontWeight: 900, color: "#EA580C", marginTop: 4, background: "#FFF7ED", borderRadius: 6, padding: "2px 6px", display: "inline-block" }}>
-          🔥 {streakDays}日連続
-        </div>
+      <div style={{ background: `${color}15`, border: `1.5px solid ${color}40`, borderRadius: 8, padding: "2px 5px", marginTop: 3, fontSize: 9, fontWeight: 800, color, display: "inline-block" }}>{g.emoji} {g.name} Lv.{l}</div>
+      <div style={{ fontSize: 32, fontWeight: 900, color, marginTop: 4, lineHeight: 1 }}>{total.toLocaleString()}</div>
+      <div style={{ fontSize: 8, color: "#9CA3AF" }}>{unit}</div>
+      {monthTotal !== undefined && (
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#9CA3AF", marginTop: 2 }}>今月 {monthTotal.toLocaleString()}{unit}</div>
       )}
-      
+      {streakDays > 0 && (
+        <div style={{ fontSize: 12, fontWeight: 900, color: "#EA580C", marginTop: 4, background: "#FFF7ED", borderRadius: 6, padding: "2px 6px", display: "inline-block" }}>🔥 {streakDays}日連続</div>
+      )}
+    </div>
+  );
+}
 
 function Btn({ onClick, color, children, small }) {
-  return (
-    <button onClick={onClick} style={{
-      background: "white", border: `1.5px solid ${color}33`, borderRadius: 8,
-      width: small ? 28 : 34, height: small ? 28 : 30, fontSize: small ? 14 : 13,
-      fontWeight: 700, color, cursor: "pointer", display: "flex",
-      alignItems: "center", justifyContent: "center", padding: 0
-    }}>
-      {children}
-    </button>
-  );
+  return (<button onClick={onClick} style={{ background: "white", border: `1.5px solid ${color}33`, borderRadius: 8, width: small ? 28 : 34, height: small ? 28 : 30, fontSize: small ? 14 : 13, fontWeight: 700, color, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>{children}</button>);
 }
-
 function Cnt({ label, unit, value, onChange, color }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color, flex: 1, minWidth: 0 }}>{label}</div>
-      <Btn onClick={() => onChange(Math.max(0, value - 10))} color={color}>-10</Btn>
-      <Btn onClick={() => onChange(Math.max(0, value - 1))} color={color}>-</Btn>
-      <div style={{ fontSize: 18, fontWeight: 800, color, minWidth: 36, textAlign: "center" }}>{value}</div>
-      <Btn onClick={() => onChange(value + 1)} color={color}>+</Btn>
-      <Btn onClick={() => onChange(value + 10)} color={color}>+10</Btn>
-      <span style={{ fontSize: 11, color: "#9CA3AF" }}>{unit}</span>
-    </div>
-  );
+  return (<div style={{ display: "flex", alignItems: "center", gap: 6 }}><div style={{ fontSize: 12, fontWeight: 700, color, flex: 1, minWidth: 0 }}>{label}</div><Btn onClick={() => onChange(Math.max(0, value - 10))} color={color}>-10</Btn><Btn onClick={() => onChange(Math.max(0, value - 1))} color={color}>-</Btn><div style={{ fontSize: 18, fontWeight: 800, color, minWidth: 36, textAlign: "center" }}>{value}</div><Btn onClick={() => onChange(value + 1)} color={color}>+</Btn><Btn onClick={() => onChange(value + 10)} color={color}>+10</Btn><span style={{ fontSize: 11, color: "#9CA3AF" }}>{unit}</span></div>);
 }
-
 function MiniCnt({ label, value, onChange, color }) {
-  return (
-    <div style={{ flex: 1 }}>
-      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 2 }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-        <Btn onClick={() => onChange(Math.max(0, value - 1))} color={color} small>-</Btn>
-        <div style={{ fontSize: 16, fontWeight: 800, color, minWidth: 28, textAlign: "center" }}>{value}</div>
-        <Btn onClick={() => onChange(value + 1)} color={color} small>+</Btn>
-      </div>
-    </div>
-  );
-}
-
-function Pill({ active, partial, bg, children }) {
-  let gradient = "#F3F4F6";
-  if (active) gradient = `linear-gradient(135deg, ${bg[0]}, ${bg[1]})`;
-  else if (partial) gradient = `${bg[0]}22`;
-  return (
-    <div style={{
-      width: 32, height: 32, borderRadius: 9, display: "flex",
-      alignItems: "center", justifyContent: "center", background: gradient, fontSize: 14
-    }}>
-      {children}
-    </div>
-  );
-}
-
-function Stars({ count }) {
-  if (count === 0) return null;
-  return (
-    <div style={{ display: "flex", gap: 1, alignItems: "center" }}>
-      {Array.from({ length: Math.min(count, 5) }, (_, i) => (
-        <span key={i} style={{ fontSize: 11 }}>⭐</span>
-      ))}
-    </div>
-  );
-}
-
-function StreakBadge({ streak }) {
-  if (streak < 2) return null;
-  const color = streak >= 14 ? "#EF4444" : streak >= 7 ? "#F59E0B" : "#3B82F6";
-  const bg = streak >= 14 ? "#FEF2F2" : streak >= 7 ? "#FFFBEB" : "#EFF6FF";
-  return (
-    <span style={{
-      fontSize: 9, fontWeight: 800, color, background: bg,
-      borderRadius: 6, padding: "1px 5px", display: "inline-flex", alignItems: "center", gap: 2
-    }}>
-      🔥{streak}日
-    </span>
-  );
+  return (<div style={{ flex: 1 }}><div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 2 }}>{label}</div><div style={{ display: "flex", alignItems: "center", gap: 4 }}><Btn onClick={() => onChange(Math.max(0, value - 1))} color={color} small>-</Btn><div style={{ fontSize: 16, fontWeight: 800, color, minWidth: 28, textAlign: "center" }}>{value}</div><Btn onClick={() => onChange(value + 1)} color={color} small>+</Btn></div></div>);
 }
 
 // ─── Day Card ───
-
 function DayCard({ dateKey, dayNum, dow, entry, isSelected, onSelect }) {
   const e = entry || {};
   const hasData = e.swings > 0 || e.pitches > 0 || e.bcAtBats > 0 || e.gameAtBats > 0;
   const dowColor = dow === 0 ? "#EF4444" : dow === 6 ? "#3B82F6" : "#6B7280";
   const stars = getDayStars(e);
-  const isWeekend = dow === 0 || dow === 6;
-
-  let bg = "white";
-  let border = "#F3F4F6";
+  let bg = "white"; let border = "#F3F4F6";
   if (isSelected) { bg = "linear-gradient(135deg, #1D4ED8, #3B82F6)"; border = "#1D4ED8"; }
   else if (stars >= 8) { bg = "linear-gradient(135deg, #FFFBEB, #FEF3C7)"; border = "#FBBF24"; }
   else if (stars >= 4) { bg = "#EFF6FF"; border = "#93C5FD"; }
   else if (hasData) { border = "#DBEAFE"; }
-
   return (
-    <div onClick={onSelect} style={{
-      minWidth: 56, width: 56, borderRadius: 14, padding: "8px 4px",
-      background: bg, border: `2px solid ${border}`,
-      textAlign: "center", cursor: "pointer", flexShrink: 0,
-      boxShadow: isSelected ? "0 4px 12px rgba(29,78,216,0.3)" : "0 1px 3px rgba(0,0,0,0.05)",
-      transition: "all 0.2s"
-    }}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: isSelected ? "rgba(255,255,255,0.7)" : dowColor }}>
-        {DOW[dow]}
-      </div>
-      <div style={{ fontSize: 20, fontWeight: 900, color: isSelected ? "white" : dowColor, lineHeight: 1.1 }}>
-        {dayNum}
-      </div>
+    <div onClick={onSelect} style={{ minWidth: 56, width: 56, borderRadius: 14, padding: "8px 4px", background: bg, border: `2px solid ${border}`, textAlign: "center", cursor: "pointer", flexShrink: 0, boxShadow: isSelected ? "0 4px 12px rgba(29,78,216,0.3)" : "0 1px 3px rgba(0,0,0,0.05)", transition: "all 0.2s" }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color: isSelected ? "rgba(255,255,255,0.7)" : dowColor }}>{DOW[dow]}</div>
+      <div style={{ fontSize: 20, fontWeight: 900, color: isSelected ? "white" : dowColor, lineHeight: 1.1 }}>{dayNum}</div>
       <div style={{ display: "flex", justifyContent: "center", gap: 3, marginTop: 4 }}>
-        <div style={{
-          width: 8, height: 8, borderRadius: 4,
-          background: e.swings >= 50 ? "#3B82F6" : e.swings > 0 ? "#93C5FD" : (isSelected ? "rgba(255,255,255,0.3)" : "#E5E7EB")
-        }} />
-        <div style={{
-          width: 8, height: 8, borderRadius: 4,
-          background: e.pitches >= 30 ? "#DC2626" : e.pitches > 0 ? "#FCA5A5" : (isSelected ? "rgba(255,255,255,0.3)" : "#E5E7EB")
-        }} />
-       <div style={{
-            width: 8, height: 8, borderRadius: 4,
-            background: e.gameAtBats > 0 ? "#F59E0B" : (isSelected ? "rgba(255,255,255,0.3)" : "#E5E7EB")
-          }} />
+        <div style={{ width: 8, height: 8, borderRadius: 4, background: e.swings >= 50 ? "#3B82F6" : e.swings > 0 ? "#93C5FD" : (isSelected ? "rgba(255,255,255,0.3)" : "#E5E7EB") }} />
+        <div style={{ width: 8, height: 8, borderRadius: 4, background: e.pitches >= 30 ? "#DC2626" : e.pitches > 0 ? "#FCA5A5" : (isSelected ? "rgba(255,255,255,0.3)" : "#E5E7EB") }} />
+        <div style={{ width: 8, height: 8, borderRadius: 4, background: e.gameAtBats > 0 ? "#F59E0B" : (isSelected ? "rgba(255,255,255,0.3)" : "#E5E7EB") }} />
       </div>
-      {stars > 0 && !isSelected && (
-        <div style={{ fontSize: 8, marginTop: 3 }}>{"⭐".repeat(Math.min(stars, 3))}</div>
-      )}
-      {stars > 0 && isSelected && (
-        <div style={{ fontSize: 8, marginTop: 3, color: "#FCD34D" }}>{"★".repeat(Math.min(stars, 3))}</div>
-      )}
+      {stars > 0 && !isSelected && (<div style={{ fontSize: 8, marginTop: 3 }}>{"⭐".repeat(Math.min(stars, 3))}</div>)}
+      {stars > 0 && isSelected && (<div style={{ fontSize: 8, marginTop: 3, color: "#FCD34D" }}>{"★".repeat(Math.min(stars, 3))}</div>)}
     </div>
   );
 }
 
 // ─── Input Panel ───
-
 function InputPanel({ dateKey, dayNum, dow, entry, onUpdate, month, data }) {
   const e = entry || {};
-  const isWeekend = dow === 0 || dow === 6;
   const stars = getDayStars(e);
   const swStrk = getStreak(data, month.year, month.month, dayNum, "swings", 50);
   const piStrk = getStreak(data, month.year, month.month, dayNum, "pitches", 30);
   const best = Math.max(swStrk, piStrk);
-
   return (
-    <div style={{
-      background: "#E5E7EB", borderRadius: "20px 20px 0 0", padding: "14px 14px 20px",
-      boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", flex: 1, overflowY: "auto",
-      WebkitOverflowScrolling: "touch"
-    }}>
+    <div style={{ background: "#E5E7EB", borderRadius: "20px 20px 0 0", padding: "14px 14px 20px", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{
-            background: "linear-gradient(135deg, #1D4ED8, #3B82F6)", borderRadius: 10,
-            width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center",
-            color: "white", fontSize: 18, fontWeight: 900
-          }}>
-            {dayNum}
-          </div>
+          <div style={{ background: "linear-gradient(135deg, #1D4ED8, #3B82F6)", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 18, fontWeight: 900 }}>{dayNum}</div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#1E3A5F" }}>
-              {month.month}月{dayNum}日（{DOW[dow]}）
-            </div>
-            {best >= 2 && (
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B" }}>
-                🔥 {best}日連続チャレンジ中！
-              </div>
-            )}
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#1E3A5F" }}>{month.month}月{dayNum}日（{DOW[dow]}）</div>
+            {best >= 2 && (<div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B" }}>🔥 {best}日連続チャレンジ中！</div>)}
           </div>
         </div>
-        {stars > 0 && (
-          <div style={{ display: "flex", gap: 1 }}>
-            {Array.from({ length: Math.min(stars, 5) }, (_, i) => (
-              <span key={i} style={{ fontSize: 14 }}>⭐</span>
-            ))}
-          </div>
-        )}
+        {stars > 0 && (<div style={{ display: "flex", gap: 1 }}>{Array.from({ length: Math.min(stars, 5) }, (_, i) => (<span key={i} style={{ fontSize: 14 }}>⭐</span>))}</div>)}
       </div>
-      <Cnt label="💥 素振り" unit="回" value={e.swings || 0} color="#3B82F6"
-        onChange={v => onUpdate(dateKey, { ...e, swings: v })} />
-      <div style={{ marginTop: 10 }}>
-        <Cnt label="⚾ ピッチング" unit="球" value={e.pitches || 0} color="#DC2626"
-          onChange={v => onUpdate(dateKey, { ...e, pitches: v })} />
-      </div>
+      <Cnt label="💥 素振り" unit="回" value={e.swings || 0} color="#3B82F6" onChange={v => onUpdate(dateKey, { ...e, swings: v })} />
+      <div style={{ marginTop: 10 }}><Cnt label="⚾ ピッチング" unit="球" value={e.pitches || 0} color="#DC2626" onChange={v => onUpdate(dateKey, { ...e, pitches: v })} /></div>
       <div style={{ marginTop: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#10B981", marginBottom: 4 }}>🎯 バッティングセンター</div>
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
@@ -529,322 +229,115 @@ function InputPanel({ dateKey, dayNum, dow, entry, onUpdate, month, data }) {
           <MiniCnt label="ミート" value={e.bcHits || 0} onChange={v => onUpdate(dateKey, { ...e, bcHits: v })} color="#10B981" />
         </div>
       </div>
-      {isWeekend && (
-        <div style={{ marginTop: 10 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B", marginBottom: 4 }}>🏟️ 試合</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <MiniCnt label="打席" value={e.gameAtBats || 0} onChange={v => onUpdate(dateKey, { ...e, gameAtBats: v })} color="#F59E0B" />
-            <MiniCnt label="ヒット" value={e.gameHits || 0} onChange={v => onUpdate(dateKey, { ...e, gameHits: v })} color="#F59E0B" />
-          </div>
+      <div style={{ marginTop: 10 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B", marginBottom: 4 }}>🏟️ 試合</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <MiniCnt label="打席" value={e.gameAtBats || 0} onChange={v => onUpdate(dateKey, { ...e, gameAtBats: v })} color="#F59E0B" />
+          <MiniCnt label="ヒット" value={e.gameHits || 0} onChange={v => onUpdate(dateKey, { ...e, gameHits: v })} color="#F59E0B" />
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
 // ─── Graph View ───
-
 function GraphView({ data, month }) {
-  const graphScrollRef = useRef(null);
-
-  // Build 3 months of data (2 previous + current)
   const chartData = useMemo(() => {
     const result = [];
     for (let offset = -2; offset <= 0; offset++) {
-      let m = month.month + offset;
-      let y = month.year;
-      if (m < 1) { m += 12; y--; }
-      if (m > 12) { m -= 12; y++; }
+      let m = month.month + offset; let y = month.year;
+      if (m < 1) { m += 12; y--; } if (m > 12) { m -= 12; y++; }
       const dim = new Date(y, m, 0).getDate();
       for (let d = 1; d <= dim; d++) {
         const e = data[fmtD(y, m, d)] || {};
-        result.push({
-          label: `${m}/${d}`,
-          month: m,
-          day: d,
-          swings: e.swings || 0,
-          pitches: e.pitches || 0,
-          bcHits: e.bcHits || 0,
-          bcAtBats: e.bcAtBats || 0,
-          gameHits: e.gameHits || 0,
-          gameAtBats: e.gameAtBats || 0,
-          stars: getDayStars(e),
-        bcRate: e.bcAtBats > 0 ? Math.round((e.bcHits || 0) / e.bcAtBats * 100) : 0,
-        });
+        result.push({ label: `${m}/${d}`, month: m, day: d, swings: e.swings || 0, pitches: e.pitches || 0, bcHits: e.bcHits || 0, bcAtBats: e.bcAtBats || 0, gameHits: e.gameHits || 0, gameAtBats: e.gameAtBats || 0, stars: getDayStars(e), bcRate: e.bcAtBats > 0 ? Math.round((e.bcHits || 0) / e.bcAtBats * 100) : 0 });
       }
     }
     return result;
   }, [data, month]);
-
-  // Daily items (swing/pitch): wide bars, ~7 days visible at a time
-  const dailyDayW = 50;
-  const dailyChartW = chartData.length * dailyDayW + 60;
-
-  // Monthly items (BC/game): thin bars, ~30 days visible at a time
-  const monthlyDayW = 13;
-  const monthlyChartW = chartData.length * monthlyDayW + 60;
-
-  // Find today's index in chartData
-  const todayIndex = useMemo(() => {
-    const today = new Date();
-    const todayM = today.getMonth() + 1;
-    const todayD = today.getDate();
-    const idx = chartData.findIndex(d => d.month === todayM && d.day === todayD);
-    return idx >= 0 ? idx : chartData.length - 1;
-  }, [chartData]);
-
-  // Auto-scroll to today on mount
+  const dailyDayW = 50; const dailyChartW = chartData.length * dailyDayW + 60;
+  const monthlyDayW = 13; const monthlyChartW = chartData.length * monthlyDayW + 60;
+  const todayIndex = useMemo(() => { const today = new Date(); const idx = chartData.findIndex(d => d.month === today.getMonth() + 1 && d.day === today.getDate()); return idx >= 0 ? idx : chartData.length - 1; }, [chartData]);
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Daily charts (wide) - scroll today to center
       const dailyScrollPos = Math.max(0, todayIndex * dailyDayW - 150);
-      // Monthly charts - scroll today to center
       const monthlyScrollPos = Math.max(0, todayIndex * monthlyDayW - 150);
-
-      const scrollables = document.querySelectorAll("[data-graph-scroll]");
-      scrollables.forEach(el => {
-        const isWide = el.getAttribute("data-graph-wide") === "true";
-        const pos = isWide ? dailyScrollPos : monthlyScrollPos;
-        el.scrollTo({ left: pos, behavior: "smooth" });
+      document.querySelectorAll("[data-graph-scroll]").forEach(el => {
+        el.scrollTo({ left: el.getAttribute("data-graph-wide") === "true" ? dailyScrollPos : monthlyScrollPos, behavior: "smooth" });
       });
     }, 400);
     return () => clearTimeout(timer);
-  }, [month, todayIndex, dailyDayW, monthlyDayW]);
-
+  }, [month, todayIndex]);
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload) return null;
-    return (
-      <div style={{
-        background: "white", borderRadius: 10, padding: "8px 12px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.15)", fontSize: 11, zIndex: 50
-      }}>
-        <div style={{ fontWeight: 800, color: "#1E3A5F", marginBottom: 4 }}>{label}</div>
-        {payload.map((p, i) => (
-          <div key={i} style={{ color: p.color, fontWeight: 700 }}>
-            {p.name}: {p.value}
-          </div>
-        ))}
-      </div>
-    );
+    return (<div style={{ background: "white", borderRadius: 10, padding: "8px 12px", boxShadow: "0 2px 10px rgba(0,0,0,0.15)", fontSize: 11, zIndex: 50 }}><div style={{ fontWeight: 800, color: "#1E3A5F", marginBottom: 4 }}>{label}</div>{payload.map((p, i) => (<div key={i} style={{ color: p.color, fontWeight: 700 }}>{p.name}: {p.value}</div>))}</div>);
   };
-
   function ScrollChart({ children, height, wide }) {
-    const w = wide ? dailyChartW : monthlyChartW;
-    const bw = wide ? Math.max(dailyDayW - 16, 8) : Math.max(monthlyDayW - 4, 4);
-    return (
-      <div data-graph-scroll data-graph-wide={wide ? "true" : "false"} style={{
-        overflowX: "auto", overflowY: "hidden",
-        WebkitOverflowScrolling: "touch",
-        scrollbarWidth: "none", msOverflowStyle: "none",
-        marginBottom: 4,
-      }}>
-        <div style={{ width: w, height }}>
-          <BarChart width={w} height={height} data={chartData} barGap={1} barSize={bw}>
-            {children}
-          </BarChart>
-        </div>
-      </div>
-    );
+    const w = wide ? dailyChartW : monthlyChartW; const bw = wide ? Math.max(dailyDayW - 16, 8) : Math.max(monthlyDayW - 4, 4);
+    return (<div data-graph-scroll data-graph-wide={wide ? "true" : "false"} style={{ overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none", marginBottom: 4 }}><div style={{ width: w, height }}><BarChart width={w} height={height} data={chartData} barGap={1} barSize={bw}>{children}</BarChart></div></div>);
   }
-
   return (
-    <div style={{
-      flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch",
-      background: "white", borderRadius: "20px 20px 0 0",
-      boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", padding: "14px 0 20px"
-    }}>
-      {/* Scroll hint */}
-      <div style={{ padding: "0 12px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontSize: 10, color: "#9CA3AF" }}>← スクロールで過去を見る</div>
-        <div style={{ fontSize: 10, color: "#9CA3AF" }}>直近3ヶ月分</div>
-      </div>
-
-      {/* Swing & Pitch - 週間ビュー */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>
-          💥 素振り ＆ ⚾ 投球（日別）
-        </div>
-        <ScrollChart height={200} wide>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-          <XAxis dataKey="label" tick={{ fontSize: 8, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={0} />
-          <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} />
-          <Tooltip content={CustomTooltip} />
-          <ReferenceLine y={50} stroke="#3B82F6" strokeDasharray="4 4" strokeWidth={1.5} />
-          <ReferenceLine y={30} stroke="#DC2626" strokeDasharray="4 4" strokeWidth={1.5} />
-          <Bar dataKey="swings" name="素振り" fill="#3B82F6" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="pitches" name="投球" fill="#DC2626" radius={[3, 3, 0, 0]} />
-        </ScrollChart>
-      </div>
-
-      {/* Stars - 週間ビュー */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>
-          ⭐ 獲得スター（日別）
-        </div>
-        <ScrollChart height={140} wide>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-          <XAxis dataKey="label" tick={{ fontSize: 8, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={0} />
-          <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} domain={[0, 10]} />
-          <Tooltip content={CustomTooltip} />
-          <Bar dataKey="stars" name="スター" fill="#F59E0B" radius={[3, 3, 0, 0]} />
-        </ScrollChart>
-      </div>
-
-      {/* BC - 月間ビュー */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>
-          🎯 バッセン ミート率（日別）
-        </div>
-        <ScrollChart height={140} wide={false}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-          <XAxis dataKey="label" tick={{ fontSize: 7, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={4} />
-          <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30}
-            domain={[0, 100]} unit="%" />
-          <Tooltip content={CustomTooltip} />
-          <Bar dataKey="bcRate" name="ミート率%" fill="#10B981" radius={[3, 3, 0, 0]} />
-        </ScrollChart>
-      </div>
-
-      {/* Game - 月間ビュー */}
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>
-          🏟️ 試合 打席・ヒット（日別）
-        </div>
-        <ScrollChart height={140} wide={false}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-          <XAxis dataKey="label" tick={{ fontSize: 7, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={4} />
-          <YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} />
-          <Tooltip content={CustomTooltip} />
-          <Bar dataKey="gameAtBats" name="打席" fill="#F59E0B" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="gameHits" name="ヒット" fill="#EF4444" radius={[3, 3, 0, 0]} />
-        </ScrollChart>
-      </div>
+    <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", background: "white", borderRadius: "20px 20px 0 0", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", padding: "14px 0 20px" }}>
+      <div style={{ padding: "0 12px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}><div style={{ fontSize: 10, color: "#9CA3AF" }}>← スクロールで過去を見る</div><div style={{ fontSize: 10, color: "#9CA3AF" }}>直近3ヶ月分</div></div>
+      <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>💥 素振り ＆ ⚾ 投球（日別）</div><ScrollChart height={200} wide><CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" /><XAxis dataKey="label" tick={{ fontSize: 8, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={0} /><YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} /><Tooltip content={CustomTooltip} /><ReferenceLine y={50} stroke="#3B82F6" strokeDasharray="4 4" strokeWidth={1.5} /><ReferenceLine y={30} stroke="#DC2626" strokeDasharray="4 4" strokeWidth={1.5} /><Bar dataKey="swings" name="素振り" fill="#3B82F6" radius={[3, 3, 0, 0]} /><Bar dataKey="pitches" name="投球" fill="#DC2626" radius={[3, 3, 0, 0]} /></ScrollChart></div>
+      <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>⭐ 獲得スター（日別）</div><ScrollChart height={140} wide><CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" /><XAxis dataKey="label" tick={{ fontSize: 8, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={0} /><YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} domain={[0, 10]} /><Tooltip content={CustomTooltip} /><Bar dataKey="stars" name="スター" fill="#F59E0B" radius={[3, 3, 0, 0]} /></ScrollChart></div>
+      <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>🎯 バッセン ミート率（日別）</div><ScrollChart height={140} wide={false}><CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" /><XAxis dataKey="label" tick={{ fontSize: 7, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={4} /><YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} domain={[0, 100]} unit="%" /><Tooltip content={CustomTooltip} /><Bar dataKey="bcRate" name="ミート率%" fill="#10B981" radius={[3, 3, 0, 0]} /></ScrollChart></div>
+      <div><div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8, paddingLeft: 12 }}>🏟️ 試合 打席・ヒット（日別）</div><ScrollChart height={140} wide={false}><CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" /><XAxis dataKey="label" tick={{ fontSize: 7, fill: "#9CA3AF" }} tickLine={false} axisLine={false} interval={4} /><YAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} tickLine={false} axisLine={false} width={30} /><Tooltip content={CustomTooltip} /><Bar dataKey="gameAtBats" name="打席" fill="#F59E0B" radius={[3, 3, 0, 0]} /><Bar dataKey="gameHits" name="ヒット" fill="#EF4444" radius={[3, 3, 0, 0]} /></ScrollChart></div>
     </div>
   );
 }
 
 // ─── Streak View ───
 function StreakView({ data, month }) {
-  const today = new Date();
-  const todayY = today.getFullYear();
-  const todayM = today.getMonth() + 1;
-  const todayD = today.getDate();
-
+  const today = new Date(); const todayY = today.getFullYear(); const todayM = today.getMonth() + 1; const todayD = today.getDate();
   const swStreak = getStreak(data, todayY, todayM, todayD, "swings", 50);
   const piStreak = getStreak(data, todayY, todayM, todayD, "pitches", 30);
-
   const dim = new Date(month.year, month.month, 0).getDate();
   const days = Array.from({ length: dim }, (_, i) => {
-    const d = i + 1;
-    const key = fmtD(month.year, month.month, d);
-    const e = data[key] || {};
+    const d = i + 1; const key = fmtD(month.year, month.month, d); const e = data[key] || {};
     const dow = new Date(month.year, month.month - 1, d).getDay();
     const isToday = month.year === todayY && month.month === todayM && d === todayD;
     const isFuture = new Date(month.year, month.month - 1, d) > today;
     return { d, dow, key, e, isToday, isFuture, swOk: e.swings >= 50, piOk: e.pitches >= 30 };
   });
-
   const firstDow = new Date(month.year, month.month - 1, 1).getDay();
-
   return (
     <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", background: "white", borderRadius: "20px 20px 0 0", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", padding: "16px 12px 20px" }}>
-
-      {/* Streak cards */}
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
         <div style={{ flex: 1, background: swStreak > 0 ? "linear-gradient(135deg, #EFF6FF, #DBEAFE)" : "#F9FAFB", borderRadius: 14, padding: "12px 8px", textAlign: "center", border: swStreak > 0 ? "1.5px solid #93C5FD" : "1.5px solid #E5E7EB" }}>
-          <div style={{ fontSize: 22 }}>💥</div>
-          <div style={{ fontSize: 11, fontWeight: 900, color: "#1E3A5F", marginTop: 2 }}>素振り</div>
+          <div style={{ fontSize: 22 }}>💥</div><div style={{ fontSize: 11, fontWeight: 900, color: "#1E3A5F", marginTop: 2 }}>素振り</div>
           <div style={{ fontSize: 36, fontWeight: 900, color: "#3B82F6", lineHeight: 1.1, marginTop: 4 }}>{swStreak}</div>
           <div style={{ fontSize: 12, fontWeight: 800, color: "#1E3A5F" }}>日連続！</div>
-          <div style={{ marginTop: 4, display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>
-            {Array.from({ length: Math.min(swStreak, 20) }, (_, i) => (
-              <span key={i} style={{ fontSize: 13 }}>🔥</span>
-            ))}
-          </div>
+          <div style={{ marginTop: 4, display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>{Array.from({ length: Math.min(swStreak, 20) }, (_, i) => (<span key={i} style={{ fontSize: 13 }}>🔥</span>))}</div>
         </div>
         <div style={{ flex: 1, background: piStreak > 0 ? "linear-gradient(135deg, #FEF2F2, #FECACA)" : "#F9FAFB", borderRadius: 14, padding: "12px 8px", textAlign: "center", border: piStreak > 0 ? "1.5px solid #FCA5A5" : "1.5px solid #E5E7EB" }}>
-          <div style={{ fontSize: 22 }}>⚾</div>
-          <div style={{ fontSize: 11, fontWeight: 900, color: "#1E3A5F", marginTop: 2 }}>ピッチング</div>
+          <div style={{ fontSize: 22 }}>⚾</div><div style={{ fontSize: 11, fontWeight: 900, color: "#1E3A5F", marginTop: 2 }}>ピッチング</div>
           <div style={{ fontSize: 36, fontWeight: 900, color: "#DC2626", lineHeight: 1.1, marginTop: 4 }}>{piStreak}</div>
           <div style={{ fontSize: 12, fontWeight: 800, color: "#1E3A5F" }}>日連続！</div>
-          <div style={{ marginTop: 4, display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>
-            {Array.from({ length: Math.min(piStreak, 20) }, (_, i) => (
-              <span key={i} style={{ fontSize: 13 }}>🔥</span>
-            ))}
-          </div>
+          <div style={{ marginTop: 4, display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>{Array.from({ length: Math.min(piStreak, 20) }, (_, i) => (<span key={i} style={{ fontSize: 13 }}>🔥</span>))}</div>
         </div>
       </div>
-
-      {/* Calendar header */}
-      <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8 }}>
-        📅 {month.month}月の達成カレンダー
-      </div>
-
-      {/* Day of week header */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
-        {DOW.map((d, i) => (
-          <div key={i} style={{ textAlign: "center", fontSize: 9, fontWeight: 700, color: i === 0 ? "#EF4444" : i === 6 ? "#3B82F6" : "#9CA3AF" }}>{d}</div>
-        ))}
-      </div>
-
-      {/* Calendar grid */}
+      <div style={{ fontSize: 13, fontWeight: 800, color: "#1E3A5F", marginBottom: 8 }}>📅 {month.month}月の達成カレンダー</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>{DOW.map((d, i) => (<div key={i} style={{ textAlign: "center", fontSize: 9, fontWeight: 700, color: i === 0 ? "#EF4444" : i === 6 ? "#3B82F6" : "#9CA3AF" }}>{d}</div>))}</div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-        {Array.from({ length: firstDow }, (_, i) => (
-          <div key={`empty-${i}`} />
-        ))}
-
-        {days.map(({ d, dow, e, isToday, isFuture, swOk, piOk }) => {
-          const anyOk = swOk || piOk;
-          const bothOk = swOk && piOk;
+        {Array.from({ length: firstDow }, (_, i) => (<div key={`empty-${i}`} />))}
+        {days.map(({ d, dow, isToday, isFuture, swOk, piOk }) => {
+          const anyOk = swOk || piOk; const bothOk = swOk && piOk;
           return (
-            <div key={d} style={{
-              borderRadius: 10, padding: "4px 2px", textAlign: "center",
-              background: isToday ? "linear-gradient(135deg, #1D4ED8, #3B82F6)" : bothOk ? "linear-gradient(135deg, #FEF3C7, #FFFBEB)" : anyOk ? "#F0FDF4" : isFuture ? "#FAFAFA" : "white",
-              border: isToday ? "2px solid #1D4ED8" : bothOk ? "1.5px solid #FBBF24" : anyOk ? "1.5px solid #BBF7D0" : "1.5px solid #F3F4F6",
-              opacity: isFuture ? 0.4 : 1,
-              minHeight: 56,
-            }}>
+            <div key={d} style={{ borderRadius: 10, padding: "4px 2px", textAlign: "center", background: isToday ? "linear-gradient(135deg, #1D4ED8, #3B82F6)" : bothOk ? "linear-gradient(135deg, #FEF3C7, #FFFBEB)" : anyOk ? "#F0FDF4" : isFuture ? "#FAFAFA" : "white", border: isToday ? "2px solid #1D4ED8" : bothOk ? "1.5px solid #FBBF24" : anyOk ? "1.5px solid #BBF7D0" : "1.5px solid #F3F4F6", opacity: isFuture ? 0.4 : 1, minHeight: 56 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: isToday ? "white" : dow === 0 ? "#EF4444" : dow === 6 ? "#3B82F6" : "#374151" }}>{d}</div>
-
-              {!isFuture && (
-                <div style={{ marginTop: 2 }}>
-                  <div style={{ fontSize: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
-                    <span>💥</span>
-                    <span style={{ color: isToday ? "white" : swOk ? "#3B82F6" : "#D1D5DB", fontWeight: 800, fontSize: 9 }}>
-                      {swOk ? "🔥" : "−"}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
-                    <span>⚾</span>
-                    <span style={{ color: isToday ? "white" : piOk ? "#DC2626" : "#D1D5DB", fontWeight: 800, fontSize: 9 }}>
-                      {piOk ? "🔥" : "−"}
-                    </span>
-                  </div>
-                </div>
-              )}
+              {!isFuture && (<div style={{ marginTop: 2 }}><div style={{ fontSize: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}><span>💥</span><span style={{ color: isToday ? "white" : swOk ? "#3B82F6" : "#D1D5DB", fontWeight: 800, fontSize: 9 }}>{swOk ? "🔥" : "−"}</span></div><div style={{ fontSize: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}><span>⚾</span><span style={{ color: isToday ? "white" : piOk ? "#DC2626" : "#D1D5DB", fontWeight: 800, fontSize: 9 }}>{piOk ? "🔥" : "−"}</span></div></div>)}
             </div>
           );
         })}
       </div>
-
-      {/* Legend */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 12 }}>
-        <div style={{ fontSize: 9, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 }}>
-          <span>💥</span> 素振り50回以上
-        </div>
-        <div style={{ fontSize: 9, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 }}>
-          <span>⚾</span> ピッチング30球以上
-        </div>
-      </div>
-      <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 4 }}>
-        <div style={{ fontSize: 9, color: "#6B7280" }}>🔥 = 達成！</div>
-        <div style={{ fontSize: 9, color: "#6B7280" }}>− = 未達成</div>
-      </div>
+      <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 12 }}><div style={{ fontSize: 9, color: "#6B7280" }}>💥 素振り50回以上</div><div style={{ fontSize: 9, color: "#6B7280" }}>⚾ ピッチング30球以上</div></div>
+      <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 4 }}><div style={{ fontSize: 9, color: "#6B7280" }}>🔥 = 達成！</div><div style={{ fontSize: 9, color: "#6B7280" }}>− = 未達成</div></div>
     </div>
   );
 }
-// ─── Roadmap View ───
 
+// ─── Roadmap View ───
 function RoadmapView({ levels, data }) {
   const categories = [
     { key: "swing", label: "素振り", icon: "💥", color: "#3B82F6", field: "swings", threshold: 50 },
@@ -856,700 +349,182 @@ function RoadmapView({ levels, data }) {
   const cat = categories.find(c => c.key === activeCat);
   const currentTotal = levels[activeCat] || 0;
   const scrollRef = useRef(null);
-
   const currentGi = Math.min(Math.floor(currentTotal / LPG), GRADES.length - 1);
   const currentLv = (currentTotal % LPG) + 1;
-
-  const achievedDays = useMemo(() => {
-    return Object.values(data).filter(e => (e[cat.field] || 0) >= cat.threshold).length;
-  }, [data, cat]);
-
+  const achievedDays = useMemo(() => Object.values(data).filter(e => (e[cat.field] || 0) >= cat.threshold).length, [data, cat]);
   const divisor = cat.key === "bc" ? 3 : cat.key === "game" ? 2 : 5;
   const nextIn = divisor - (achievedDays % divisor);
-
-  // Auto scroll to player position
-  
-  // Mountain height for each grade (0 = bottom, 1 = peak)
-  const totalG = GRADES.length;
-  const stageW = 200;
-  const mountainH = 500;
-  const baseY = mountainH - 20;
-  const peakY = 60;
-
-  // Calculate fractional progress between current and next grade
-  const progressInLevel = useMemo(() => {
-    return (achievedDays % divisor) / divisor;
-  }, [achievedDays, divisor]);
-
+  const totalG = GRADES.length; const stageW = 200; const mountainH = 500; const baseY = mountainH - 20; const peakY = 60;
+  const progressInLevel = useMemo(() => (achievedDays % divisor) / divisor, [achievedDays, divisor]);
   const fractionBetweenGrades = ((currentLv - 1) + progressInLevel) / LPG;
-  
-useEffect(() => {
+  useEffect(() => {
     if (scrollRef.current) {
       const playerX = (currentGi + fractionBetweenGrades) * stageW + 40;
-      const containerW = scrollRef.current.clientWidth;
-      const scrollPos = Math.max(0, playerX - containerW / 2);
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ left: scrollPos, behavior: "smooth" });
-      }, 300);
+      const scrollPos = Math.max(0, playerX - scrollRef.current.clientWidth / 2);
+      setTimeout(() => { scrollRef.current?.scrollTo({ left: scrollPos, behavior: "smooth" }); }, 300);
     }
   }, [activeCat, currentTotal, fractionBetweenGrades]);
   return (
-    <div style={{
-      flex: 1, display: "flex", flexDirection: "column", overflow: "hidden",
-      background: "linear-gradient(180deg, #87CEEB 0%, #B0E0FF 40%, #E8F5E9 80%, #A5D6A7 100%)",
-    }}>
-      <style>{`
-        @keyframes flagWave {
-          0%, 100% { transform: rotate(-2deg); }
-          50% { transform: rotate(2deg); }
-        }
-        @keyframes playerBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
-        @keyframes sparkle {
-          0%, 100% { opacity: 0.3; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1.2); }
-        }
-      `}</style>
-
-      {/* Category selector */}
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "linear-gradient(180deg, #87CEEB 0%, #B0E0FF 40%, #E8F5E9 80%, #A5D6A7 100%)" }}>
+      <style>{`@keyframes flagWave { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } } @keyframes playerBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } } @keyframes sparkle { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }`}</style>
       <div style={{ padding: "10px 10px 6px", flexShrink: 0, background: "rgba(255,255,255,0.3)", backdropFilter: "blur(8px)" }}>
-        <div style={{ fontSize: 14, fontWeight: 900, color: "#1E3A5F", marginBottom: 6, textAlign: "center" }}>
-          🗺️ クエストロードマップ
-        </div>
-        <div style={{ display: "flex", gap: 4 }}>
-          {categories.map(c => (
-            <button key={c.key} onClick={() => setActiveCat(c.key)} style={{
-              flex: 1, padding: "5px 2px", border: "none", borderRadius: 8, cursor: "pointer",
-              fontSize: 10, fontWeight: 800,
-              background: activeCat === c.key ? "white" : "rgba(255,255,255,0.5)",
-              color: activeCat === c.key ? c.color : "#6B7280",
-              boxShadow: activeCat === c.key ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
-              transition: "all 0.2s"
-            }}>
-              {c.icon} {c.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Current status */}
-        <div style={{
-          marginTop: 6, background: "white", borderRadius: 10, padding: "8px 12px",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-        }}>
+        <div style={{ fontSize: 14, fontWeight: 900, color: "#1E3A5F", marginBottom: 6, textAlign: "center" }}>🗺️ クエストロードマップ</div>
+        <div style={{ display: "flex", gap: 4 }}>{categories.map(c => (<button key={c.key} onClick={() => setActiveCat(c.key)} style={{ flex: 1, padding: "5px 2px", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 10, fontWeight: 800, background: activeCat === c.key ? "white" : "rgba(255,255,255,0.5)", color: activeCat === c.key ? c.color : "#6B7280", boxShadow: activeCat === c.key ? "0 2px 8px rgba(0,0,0,0.1)" : "none" }}>{c.icon} {c.label}</button>))}</div>
+        <div style={{ marginTop: 6, background: "white", borderRadius: 10, padding: "8px 12px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 20 }}>{GRADES[currentGi].emoji}</span>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 900, color: GRADES[currentGi].color }}>
-                  {GRADES[currentGi].name} Lv.{currentLv}
-                </div>
-                <div style={{ fontSize: 9, color: "#9CA3AF" }}>次のレベルまで あと{nextIn}日</div>
-              </div>
-            </div>
-            {currentGi < totalG - 1 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <span style={{ fontSize: 9, color: "#9CA3AF" }}>次</span>
-                <span style={{ fontSize: 16 }}>{GRADES[Math.min(currentGi + 1, totalG - 1)].emoji}</span>
-              </div>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ fontSize: 20 }}>{GRADES[currentGi].emoji}</span><div><div style={{ fontSize: 12, fontWeight: 900, color: GRADES[currentGi].color }}>{GRADES[currentGi].name} Lv.{currentLv}</div><div style={{ fontSize: 9, color: "#9CA3AF" }}>次のレベルまで あと{nextIn}日</div></div></div>
+            {currentGi < totalG - 1 && (<div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ fontSize: 9, color: "#9CA3AF" }}>次</span><span style={{ fontSize: 16 }}>{GRADES[Math.min(currentGi + 1, totalG - 1)].emoji}</span></div>)}
           </div>
-          {/* Progress bar toward next grade */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#E5E7EB" }}>
-              <div style={{
-                height: 6, borderRadius: 3,
-                background: `linear-gradient(90deg, ${cat.color}, ${cat.color}CC)`,
-                width: `${Math.round(fractionBetweenGrades * 100)}%`,
-                transition: "width 0.8s ease-out",
-              }} />
-            </div>
-            <div style={{ fontSize: 9, fontWeight: 800, color: cat.color }}>
-              {Math.round(fractionBetweenGrades * 100)}%
-            </div>
-          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}><div style={{ flex: 1, height: 6, borderRadius: 3, background: "#E5E7EB" }}><div style={{ height: 6, borderRadius: 3, background: `linear-gradient(90deg, ${cat.color}, ${cat.color}CC)`, width: `${Math.round(fractionBetweenGrades * 100)}%`, transition: "width 0.8s ease-out" }} /></div><div style={{ fontSize: 9, fontWeight: 800, color: cat.color }}>{Math.round(fractionBetweenGrades * 100)}%</div></div>
         </div>
       </div>
-
-      {/* Horizontal scrolling mountain */}
-      <div ref={scrollRef} style={{
-        flex: 1, overflowX: "auto", overflowY: "hidden",
-        WebkitOverflowScrolling: "touch",
-        scrollbarWidth: "none", msOverflowStyle: "none",
-        position: "relative",
-      }}>
-        <div style={{
-          width: totalG * stageW + 80, height: "100%",
-          position: "relative", minHeight: mountainH,
-        }}>
-
-          {/* Mountain silhouette background */}
-          <svg width={totalG * stageW + 80} height={mountainH} style={{
-            position: "absolute", bottom: 0, left: 0,
-          }}>
-            <defs>
-              <linearGradient id="mountainGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#A0826D" />
-                <stop offset="15%" stopColor="#8B7355" />
-                <stop offset="40%" stopColor="#5B8C3E" />
-                <stop offset="70%" stopColor="#3A7D2C" />
-                <stop offset="100%" stopColor="#2E7D32" />
-              </linearGradient>
-              <linearGradient id="snowGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FFFFFF" />
-                <stop offset="100%" stopColor="#E0E0E0" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-
-            {/* Mountain fill - smooth curve through grade points */}
-            <path d={(() => {
-              const pts = GRADES.map((_, gi) => ({
-                x: gi * stageW + stageW / 2 + 40,
-                y: baseY - (gi / (totalG - 1)) * (baseY - peakY),
-              }));
-              // Start from bottom-left
-              let d = `M 0 ${mountainH} L 0 ${pts[0].y + 10}`;
-              // Smooth curve through all points
-              for (let i = 0; i < pts.length; i++) {
-                if (i === 0) {
-                  d += ` L ${pts[0].x} ${pts[0].y}`;
-                } else {
-                  const prev = pts[i - 1];
-                  const cur = pts[i];
-                  const cpx = (prev.x + cur.x) / 2;
-                  d += ` C ${cpx} ${prev.y} ${cpx} ${cur.y} ${cur.x} ${cur.y}`;
-                }
-              }
-              // Close to bottom-right
-              d += ` L ${totalG * stageW + 80} ${pts[pts.length - 1].y + 10} L ${totalG * stageW + 80} ${mountainH} Z`;
-              return d;
-            })()} fill="url(#mountainGrad)" />
-
-            {/* Snow cap on the last few peaks */}
+      <div ref={scrollRef} style={{ flex: 1, overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none", position: "relative" }}>
+        <div style={{ width: totalG * stageW + 80, height: "100%", position: "relative", minHeight: mountainH }}>
+          <svg width={totalG * stageW + 80} height={mountainH} style={{ position: "absolute", bottom: 0, left: 0 }}>
+            <defs><linearGradient id="mountainGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#A0826D" /><stop offset="15%" stopColor="#8B7355" /><stop offset="40%" stopColor="#5B8C3E" /><stop offset="70%" stopColor="#3A7D2C" /><stop offset="100%" stopColor="#2E7D32" /></linearGradient><linearGradient id="snowGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#FFFFFF" /><stop offset="100%" stopColor="#E0E0E0" stopOpacity="0" /></linearGradient></defs>
+            <path d={(() => { const pts = GRADES.map((_, gi) => ({ x: gi * stageW + stageW / 2 + 40, y: baseY - (gi / (totalG - 1)) * (baseY - peakY) })); let d = `M 0 ${mountainH} L 0 ${pts[0].y + 10}`; for (let i = 0; i < pts.length; i++) { if (i === 0) d += ` L ${pts[0].x} ${pts[0].y}`; else { const prev = pts[i-1]; const cur = pts[i]; const cpx = (prev.x + cur.x) / 2; d += ` C ${cpx} ${prev.y} ${cpx} ${cur.y} ${cur.x} ${cur.y}`; } } d += ` L ${totalG * stageW + 80} ${pts[pts.length-1].y + 10} L ${totalG * stageW + 80} ${mountainH} Z`; return d; })()} fill="url(#mountainGrad)" />
             <ellipse cx={GRADES.length * stageW - stageW / 2 + 40} cy={peakY + 10} rx={50} ry={20} fill="url(#snowGrad)" opacity="0.7" />
-
-            {/* Trail path */}
-            {GRADES.map((_, gi) => {
-              if (gi === 0) return null;
-              const x1 = (gi - 1) * stageW + stageW / 2 + 40;
-              const y1 = baseY - ((gi - 1) / (totalG - 1)) * (baseY - peakY);
-              const x2 = gi * stageW + stageW / 2 + 40;
-              const y2 = baseY - (gi / (totalG - 1)) * (baseY - peakY);
-              const isCleared = gi - 1 < currentGi;
-              return (
-                <line key={gi} x1={x1} y1={y1} x2={x2} y2={y2}
-                  stroke={isCleared ? "#FFD700" : "#FFFFFF55"}
-                  strokeWidth={isCleared ? 3 : 2}
-                  strokeDasharray={isCleared ? "none" : "6 4"}
-                  strokeLinecap="round"
-                />
-              );
-            })}
+            {GRADES.map((_, gi) => { if (gi === 0) return null; const x1 = (gi-1) * stageW + stageW/2 + 40; const y1 = baseY - ((gi-1) / (totalG-1)) * (baseY - peakY); const x2 = gi * stageW + stageW/2 + 40; const y2 = baseY - (gi / (totalG-1)) * (baseY - peakY); return <line key={gi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={gi-1 < currentGi ? "#FFD700" : "#FFFFFF55"} strokeWidth={gi-1 < currentGi ? 3 : 2} strokeDasharray={gi-1 < currentGi ? "none" : "6 4"} strokeLinecap="round" />; })}
           </svg>
-
-          {/* Grade markers */}
           {GRADES.map((grade, gi) => {
-            const x = gi * stageW + stageW / 2 + 40;
-            const y = baseY - (gi / (totalG - 1)) * (baseY - peakY);
-            const isCompleted = gi < currentGi;
-            const isCurrent = gi === currentGi;
-            const isFuture = gi > currentGi;
-            const isNext = gi === currentGi + 1;
-            const isLast = gi === totalG - 1;
-
+            const x = gi * stageW + stageW / 2 + 40; const y = baseY - (gi / (totalG - 1)) * (baseY - peakY);
+            const isCompleted = gi < currentGi; const isCurrent = gi === currentGi; const isFuture = gi > currentGi; const isNext = gi === currentGi + 1; const isLast = gi === totalG - 1;
             return (
-              <div key={gi} data-grade={gi} style={{
-                position: "absolute",
-                left: x - 40,
-                top: y - 56,
-                width: 80,
-                textAlign: "center",
-                transition: "all 0.3s",
-              }}>
-                {/* Flag pole */}
-                <div style={{
-                  position: "relative",
-                  display: "flex", flexDirection: "column", alignItems: "center",
-                }}>
-                  {/* Flag */}
-                  <div style={{
-                    animation: isCurrent ? "flagWave 2s ease-in-out infinite" : "none",
-                    transformOrigin: "bottom center",
-                  }}>
-                    {/* Flag banner */}
-                    <div style={{
-                      background: isCompleted
-                        ? "linear-gradient(135deg, #22C55E, #16A34A)"
-                        : isCurrent
-                          ? `linear-gradient(135deg, ${cat.color}, ${cat.color}CC)`
-                          : isNext
-                            ? "linear-gradient(135deg, #FDE68A, #FCD34D)"
-                            : "#D1D5DB",
-                      borderRadius: 8,
-                      padding: "4px 6px",
-                      minWidth: 56,
-                      boxShadow: isCurrent
-                        ? `0 4px 12px ${cat.color}40`
-                        : isCompleted
-                          ? "0 2px 8px rgba(34,197,94,0.3)"
-                          : "0 1px 3px rgba(0,0,0,0.1)",
-                      position: "relative",
-                    }}>
-                      {/* Gem icon */}
-                      <div style={{
-                        fontSize: isCurrent ? 22 : 18,
-                        filter: isFuture && !isNext ? "grayscale(0.5)" : "none",
-                      }}>
-                        {grade.emoji}
-                      </div>
-
-                      {/* Lock overlay for future */}
-                      {isFuture && (
-                        <div style={{
-                          position: "absolute", top: -4, right: -4,
-                          fontSize: 10, background: "white", borderRadius: 6,
-                          width: 16, height: 16, display: "flex",
-                          alignItems: "center", justifyContent: "center",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.15)"
-                        }}>
-                          🔒
-                        </div>
-                      )}
-
-                      {/* Checkmark for completed */}
-                      {isCompleted && (
-                        <div style={{
-                          position: "absolute", top: -4, right: -4,
-                          fontSize: 10, background: "#22C55E", borderRadius: 6,
-                          width: 16, height: 16, display: "flex",
-                          alignItems: "center", justifyContent: "center",
-                          color: "white", fontWeight: 900
-                        }}>
-                          ✓
-                        </div>
-                      )}
+              <div key={gi} data-grade={gi} style={{ position: "absolute", left: x - 40, top: y - 56, width: 80, textAlign: "center", transition: "all 0.3s" }}>
+                <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ animation: isCurrent ? "flagWave 2s ease-in-out infinite" : "none", transformOrigin: "bottom center" }}>
+                    <div style={{ background: isCompleted ? "linear-gradient(135deg, #22C55E, #16A34A)" : isCurrent ? `linear-gradient(135deg, ${cat.color}, ${cat.color}CC)` : isNext ? "linear-gradient(135deg, #FDE68A, #FCD34D)" : "#D1D5DB", borderRadius: 8, padding: "4px 6px", minWidth: 56, boxShadow: isCurrent ? `0 4px 12px ${cat.color}40` : isCompleted ? "0 2px 8px rgba(34,197,94,0.3)" : "0 1px 3px rgba(0,0,0,0.1)", position: "relative" }}>
+                      <div style={{ fontSize: isCurrent ? 22 : 18, filter: isFuture && !isNext ? "grayscale(0.5)" : "none" }}>{grade.emoji}</div>
+                      {isFuture && <div style={{ position: "absolute", top: -4, right: -4, fontSize: 10, background: "white", borderRadius: 6, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}>🔒</div>}
+                      {isCompleted && <div style={{ position: "absolute", top: -4, right: -4, fontSize: 10, background: "#22C55E", borderRadius: 6, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 900 }}>✓</div>}
                     </div>
                   </div>
-
-                  {/* Pole */}
-                  <div style={{
-                    width: 3, height: 16,
-                    background: isCompleted ? "#A16207" : "#9CA3AF",
-                    borderRadius: 2,
-                  }} />
-
-                  {/* Base marker */}
-                  <div style={{
-                    width: isCurrent ? 16 : 12, height: isCurrent ? 16 : 12, borderRadius: "50%",
-                    background: isCompleted ? "#FFD700" : isCurrent ? cat.color : "#D1D5DB",
-                    border: isCurrent ? "2px solid white" : "none",
-                    boxShadow: isCurrent ? `0 0 8px ${cat.color}60` : "none",
-                  }} />
+                  <div style={{ width: 3, height: 16, background: isCompleted ? "#A16207" : "#9CA3AF", borderRadius: 2 }} />
+                  <div style={{ width: isCurrent ? 16 : 12, height: isCurrent ? 16 : 12, borderRadius: "50%", background: isCompleted ? "#FFD700" : isCurrent ? cat.color : "#D1D5DB", border: isCurrent ? "2px solid white" : "none", boxShadow: isCurrent ? `0 0 8px ${cat.color}60` : "none" }} />
                 </div>
-
-                {/* Label */}
-                <div style={{
-                  marginTop: 4, fontSize: 9, fontWeight: 800,
-                  color: isCompleted ? "#1E3A5F" : isCurrent ? cat.color : (isFuture ? "#9CA3AF" : "#6B7280"),
-                  lineHeight: 1.1,
-                }}>
-                  {grade.name}
-                </div>
-
-                {/* Sub label */}
-                {isCurrent && (
-                  <div style={{
-                    fontSize: 7, fontWeight: 700, color: "white",
-                    background: cat.color, borderRadius: 4, padding: "1px 4px",
-                    display: "inline-block", marginTop: 2,
-                  }}>
-                    いまココ！
-                  </div>
-                )}
-
-                {/* Peak marker for last */}
-                {isLast && (
-                  <div style={{
-                    fontSize: 8, fontWeight: 800, color: "#FF6F00", marginTop: 2,
-                    animation: "sparkle 2s ease-in-out infinite",
-                  }}>
-                    🏔️ 山頂
-                  </div>
-                )}
+                <div style={{ marginTop: 4, fontSize: 9, fontWeight: 800, color: isCompleted ? "#1E3A5F" : isCurrent ? cat.color : (isFuture ? "#9CA3AF" : "#6B7280"), lineHeight: 1.1 }}>{grade.name}</div>
+                {isCurrent && <div style={{ fontSize: 7, fontWeight: 700, color: "white", background: cat.color, borderRadius: 4, padding: "1px 4px", display: "inline-block", marginTop: 2 }}>いまココ！</div>}
+                {isLast && <div style={{ fontSize: 8, fontWeight: 800, color: "#FF6F00", marginTop: 2, animation: "sparkle 2s ease-in-out infinite" }}>🏔️ 山頂</div>}
               </div>
             );
           })}
-
-          {/* Player character 👦 at fractional position */}
-          {(() => {
-            const nextGi = Math.min(currentGi + 1, totalG - 1);
-            const curX = currentGi * stageW + stageW / 2 + 40;
-            const curY = baseY - (currentGi / (totalG - 1)) * (baseY - peakY);
-            const nextX = nextGi * stageW + stageW / 2 + 40;
-            const nextY = baseY - (nextGi / (totalG - 1)) * (baseY - peakY);
-            const px = curX + (nextX - curX) * fractionBetweenGrades;
-            const py = curY + (nextY - curY) * fractionBetweenGrades;
-            return (
-              <div style={{
-                position: "absolute",
-                left: px - 18,
-                top: py - 52,
-                textAlign: "center",
-                zIndex: 10,
-                transition: "left 1s ease-out, top 1s ease-out",
-              }}>
-                <div style={{
-                  fontSize: 32,
-                  animation: "playerBounce 1.5s ease-in-out infinite",
-                  filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
-                }}>
-                  👦
-                </div>
-                <div style={{
-                  fontSize: 7, fontWeight: 800, color: "white",
-                  background: cat.color, borderRadius: 4, padding: "1px 4px",
-                  display: "inline-block", marginTop: 0,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-                }}>
-                  {GRADES[currentGi].name} Lv.{currentLv}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Clouds decoration */}
-          {[
-            { left: 60, top: 10, size: 40, opacity: 0.6 },
-            { left: 300, top: 20, size: 50, opacity: 0.4 },
-            { left: 600, top: 5, size: 45, opacity: 0.5 },
-            { left: 900, top: 15, size: 55, opacity: 0.3 },
-            { left: 1200, top: 8, size: 40, opacity: 0.5 },
-            { left: 1600, top: 12, size: 50, opacity: 0.4 },
-            { left: 2000, top: 6, size: 45, opacity: 0.6 },
-          ].map((cloud, i) => (
-            <div key={i} style={{
-              position: "absolute", left: cloud.left, top: cloud.top,
-              fontSize: cloud.size, opacity: cloud.opacity,
-              pointerEvents: "none",
-            }}>
-              ☁️
-            </div>
-          ))}
-
-          {/* Trees decoration on mountain */}
-          {GRADES.map((_, gi) => {
-            if (gi % 3 !== 1) return null;
-            const x = gi * stageW + 20;
-            const y = baseY - (gi / (totalG - 1)) * (baseY - peakY) + 10;
-            return (
-              <div key={`tree-${gi}`} style={{
-                position: "absolute", left: x, top: y,
-                fontSize: 16, opacity: 0.6, pointerEvents: "none",
-              }}>
-                🌲
-              </div>
-            );
-          })}
+          {(() => { const nextGi = Math.min(currentGi + 1, totalG - 1); const curX = currentGi * stageW + stageW / 2 + 40; const curY = baseY - (currentGi / (totalG - 1)) * (baseY - peakY); const nextX = nextGi * stageW + stageW / 2 + 40; const nextY = baseY - (nextGi / (totalG - 1)) * (baseY - peakY); const px = curX + (nextX - curX) * fractionBetweenGrades; const py = curY + (nextY - curY) * fractionBetweenGrades; return (<div style={{ position: "absolute", left: px - 18, top: py - 52, textAlign: "center", zIndex: 10, transition: "left 1s ease-out, top 1s ease-out" }}><div style={{ fontSize: 32, animation: "playerBounce 1.5s ease-in-out infinite", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}>👦</div><div style={{ fontSize: 7, fontWeight: 800, color: "white", background: cat.color, borderRadius: 4, padding: "1px 4px", display: "inline-block", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>{GRADES[currentGi].name} Lv.{currentLv}</div></div>); })()}
+          {[{ left: 60, top: 10, size: 40, opacity: 0.6 }, { left: 300, top: 20, size: 50, opacity: 0.4 }, { left: 600, top: 5, size: 45, opacity: 0.5 }, { left: 900, top: 15, size: 55, opacity: 0.3 }, { left: 1200, top: 8, size: 40, opacity: 0.5 }, { left: 1600, top: 12, size: 50, opacity: 0.4 }, { left: 2000, top: 6, size: 45, opacity: 0.6 }].map((cloud, i) => (<div key={i} style={{ position: "absolute", left: cloud.left, top: cloud.top, fontSize: cloud.size, opacity: cloud.opacity, pointerEvents: "none" }}>☁️</div>))}
+          {GRADES.map((_, gi) => { if (gi % 3 !== 1) return null; const x = gi * stageW + 20; const y = baseY - (gi / (totalG - 1)) * (baseY - peakY) + 10; return <div key={`tree-${gi}`} style={{ position: "absolute", left: x, top: y, fontSize: 16, opacity: 0.6, pointerEvents: "none" }}>🌲</div>; })}
         </div>
       </div>
-
-      {/* Bottom legend */}
-      <div style={{
-        flexShrink: 0, padding: "8px 12px", background: "rgba(255,255,255,0.7)",
-        backdropFilter: "blur(8px)",
-        display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#6B7280" }}>
-          <div style={{ width: 10, height: 10, borderRadius: 5, background: "#22C55E" }} /> クリア済
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#6B7280" }}>
-          <div style={{ width: 10, height: 10, borderRadius: 5, background: cat.color }} /> 現在地
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#6B7280" }}>
-          <span style={{ fontSize: 10 }}>🔒</span> ロック中
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#6B7280" }}>
-          ← スクロール →
-        </div>
+      <div style={{ flexShrink: 0, padding: "8px 12px", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#6B7280" }}><div style={{ width: 10, height: 10, borderRadius: 5, background: "#22C55E" }} /> クリア済</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#6B7280" }}><div style={{ width: 10, height: 10, borderRadius: 5, background: cat.color }} /> 現在地</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#6B7280" }}><span style={{ fontSize: 10 }}>🔒</span> ロック中</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#6B7280" }}>← スクロール →</div>
       </div>
     </div>
   );
 }
 
 // ─── Main ───
-
 export default function Home() {
   const { data, loading, saveEntry } = useEntries();
-
-  const [month, setMonth] = useState(() => {
-    const n = new Date();
-    return { year: n.getFullYear(), month: n.getMonth() + 1 };
-  });
+  const [month, setMonth] = useState(() => { const n = new Date(); return { year: n.getFullYear(), month: n.getMonth() + 1 }; });
   const [selectedDay, setSelectedDay] = useState(() => new Date().getDate());
   const [tab, setTab] = useState("dashboard");
   const scrollRef = useRef(null);
-
   const [celebration, setCelebration] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const prevLevelsRef = useRef(null);
 
-  useEffect(() => {
-    if (!loading && !prevLevelsRef.current) {
-      prevLevelsRef.current = calcLevels(data);
-    }
-  }, [loading, data]);
-
-  useEffect(() => {
-    if (loading) return;
-    if (scrollRef.current && tab === "dashboard") {
-      const timer = setTimeout(() => {
-        const target = scrollRef.current?.children[selectedDay - 1];
-        if (target) {
-          target.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-        }
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedDay, month, tab, loading]);
+  useEffect(() => { if (!loading && !prevLevelsRef.current) { prevLevelsRef.current = calcLevels(data); } }, [loading, data]);
+  useEffect(() => { if (loading) return; if (scrollRef.current && tab === "dashboard") { const timer = setTimeout(() => { const target = scrollRef.current?.children[selectedDay - 1]; if (target) target.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" }); }, 300); return () => clearTimeout(timer); } }, [selectedDay, month, tab, loading]);
 
   const upd = useCallback((k, e) => {
     const oldLvls = prevLevelsRef.current || calcLevels(data);
-    const tempData = { ...data, [k]: e };
-    const newLvls = calcLevels(tempData);
-
+    const tempData = { ...data, [k]: e }; const newLvls = calcLevels(tempData);
     const cats = ["swing", "pitch", "bc", "game"];
-    for (const cat of cats) {
-      if (newLvls[cat] > oldLvls[cat]) {
-        setCelebration({ category: cat, prevLevel: oldLvls[cat], newLevel: newLvls[cat] });
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3000);
-        break;
-      }
-    }
+    for (const cat of cats) { if (newLvls[cat] > oldLvls[cat]) { setCelebration({ category: cat, prevLevel: oldLvls[cat], newLevel: newLvls[cat] }); setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000); break; } }
     prevLevelsRef.current = newLvls;
-
     saveEntry(k, e);
   }, [data, saveEntry]);
-  const chgM = (dir) => {
-    setMonth(p => {
-      let m = p.month + dir, y = p.year;
-      if (m > 12) { m = 1; y++; }
-      if (m < 1) { m = 12; y--; }
-      return { year: y, month: m };
-    });
-    setSelectedDay(1);
-  };
+
+  const chgM = (dir) => { setMonth(p => { let m = p.month + dir, y = p.year; if (m > 12) { m = 1; y++; } if (m < 1) { m = 12; y--; } return { year: y, month: m }; }); setSelectedDay(1); };
 
   const levels = useMemo(() => calcLevels(data), [data]);
-
   const dim = new Date(month.year, month.month, 0).getDate();
-  const tSw = calcTotal(data, month, "swings");
-  const tPi = calcTotal(data, month, "pitches");
-  const dSw = countOver(data, month, "swings", 50);
-  const dPi = countOver(data, month, "pitches", 30);
-  const bcA = calcAvg(data, month, "bc");
-  const gmA = calcAvg(data, month, "game");
-  const swStreak = getCurrentStreak(data, month, "swings", 50);
-  const piStreak = getCurrentStreak(data, month, "pitches", 30);
-
-  // Calc days until next level
+  const tSw = calcTotal(data, month, "swings"); const tPi = calcTotal(data, month, "pitches");
+  const dSw = countOver(data, month, "swings", 50); const dPi = countOver(data, month, "pitches", 30);
+  const bcA = calcAvg(data, month, "bc"); const gmA = calcAvg(data, month, "game");
+  const swStreak = getCurrentStreak(data, month, "swings", 50); const piStreak = getCurrentStreak(data, month, "pitches", 30);
   const allSwDays = Object.values(data).filter(e => e.swings >= 50).length;
   const allPiDays = Object.values(data).filter(e => e.pitches >= 30).length;
-  const swNextIn = 5 - (allSwDays % 5);
-  const piNextIn = 5 - (allPiDays % 5);
-
-  const monthStars = useMemo(() => {
-    let s = 0;
-    for (let d = 1; d <= dim; d++) {
-      s += getDayStars(data[fmtD(month.year, month.month, d)]);
-    }
-    return s;
-  }, [data, month, dim]);
-
-  const fmtAvg = (v) => {
-    if (v === null) return "---";
-    return "." + Math.round(v * 1000).toString().padStart(3, "0");
-  };
-
+  const swNextIn = 5 - (allSwDays % 5); const piNextIn = 5 - (allPiDays % 5);
+  const totalSwings = Object.values(data).reduce((s, e) => s + (e.swings || 0), 0);
+  const totalPitches = Object.values(data).reduce((s, e) => s + (e.pitches || 0), 0);
+  const monthStars = useMemo(() => { let s = 0; for (let d = 1; d <= dim; d++) s += getDayStars(data[fmtD(month.year, month.month, d)]); return s; }, [data, month, dim]);
+  const fmtAvg = (v) => v === null ? "---" : "." + Math.round(v * 1000).toString().padStart(3, "0");
   const selKey = fmtD(month.year, month.month, selectedDay);
   const selDow = new Date(month.year, month.month - 1, selectedDay).getDay();
 
-  if (loading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", fontFamily: "'M PLUS Rounded 1c', sans-serif", color: "#9CA3AF" }}>
-        読み込み中...
-      </div>
-    );
-  }
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", fontFamily: "'M PLUS Rounded 1c', sans-serif", color: "#9CA3AF" }}>読み込み中...</div>;
 
   return (
-    <div style={{
-      fontFamily: "'M PLUS Rounded 1c', -apple-system, sans-serif",
-      height: "100vh", maxWidth: 430, margin: "0 auto",
-      display: "flex", flexDirection: "column", overflow: "hidden", background: "#B91C1C",
-      position: "relative"
-    }}>
+    <div style={{ fontFamily: "'M PLUS Rounded 1c', -apple-system, sans-serif", height: "100vh", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column", overflow: "hidden", background: "#B91C1C", position: "relative" }}>
       <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet" />
-
-      {/* Confetti overlay */}
       <Confetti active={showConfetti} />
+      <LevelUpCard show={celebration !== null} category={celebration?.category} prevLevel={celebration?.prevLevel || 0} newLevel={celebration?.newLevel || 0} onClose={() => setCelebration(null)} />
 
-      {/* Level-up card */}
-      <LevelUpCard
-        show={celebration !== null}
-        category={celebration?.category}
-        prevLevel={celebration?.prevLevel || 0}
-        newLevel={celebration?.newLevel || 0}
-        onClose={() => setCelebration(null)}
-      />
-
-      {/* ═══ HEADER ═══ */}
-      <div style={{
-        background: "linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 40%, #DC2626 100%)",
-        padding: "8px 12px", color: "white", flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "space-between"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 16 }}>⚾</span>
-          <div>
-            <div style={{ fontSize: 7, letterSpacing: 2, opacity: 0.5 }}>KENTO36 🔥LEVEL UP APP🔥</div>
-            <div style={{ fontSize: 13, fontWeight: 900, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>👦KENTO36🔥レベルUPアプリ🔥</div>
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => chgM(-1)} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 8, width: 28, height: 28, fontSize: 12, color: "white", cursor: "pointer", fontWeight: 700 }}>◀</button>
-          <div style={{ fontSize: 14, fontWeight: 900 }}>{month.month}月</div>
-          <button onClick={() => chgM(1)} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 8, width: 28, height: 28, fontSize: 12, color: "white", cursor: "pointer", fontWeight: 700 }}>▶</button>
-        </div>
+      {/* HEADER */}
+      <div style={{ background: "linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 40%, #DC2626 100%)", padding: "8px 12px", color: "white", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ fontSize: 16 }}>⚾</span><div><div style={{ fontSize: 7, letterSpacing: 2, opacity: 0.5 }}>KENTO36 🔥LEVEL UP APP🔥</div><div style={{ fontSize: 13, fontWeight: 900, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>👦KENTO36🔥レベルUPアプリ🔥</div></div></div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}><button onClick={() => chgM(-1)} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 8, width: 28, height: 28, fontSize: 12, color: "white", cursor: "pointer", fontWeight: 700 }}>◀</button><div style={{ fontSize: 14, fontWeight: 900 }}>{month.month}月</div><button onClick={() => chgM(1)} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 8, width: 28, height: 28, fontSize: 12, color: "white", cursor: "pointer", fontWeight: 700 }}>▶</button></div>
       </div>
 
-      {/* ═══ TAB BAR ═══ */}
-      <div style={{
-        display: "flex", flexShrink: 0, background: "#991B1B", padding: "4px 8px"
-      }}>
-        {[
-          { id: "dashboard", label: "📊 ダッシュボード" },
-          { id: "graph", label: "📈 グラフ" },
-          { id: "streak", label: "🔥 ストリーク" },
-          { id: "roadmap", label: "🗺️ ロードマップ" },
-        ].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            flex: 1, padding: "6px 0", border: "none", borderRadius: 8, cursor: "pointer",
-            fontSize: 10, fontWeight: 800,
-            background: tab === t.id ? "white" : "transparent",
-            color: tab === t.id ? "#B91C1C" : "rgba(255,255,255,0.7)",
-            transition: "all 0.2s"
-          }}>
-            {t.label}
-          </button>
+      {/* TAB BAR */}
+      <div style={{ display: "flex", flexShrink: 0, background: "#991B1B", padding: "4px 8px" }}>
+        {[{ id: "dashboard", label: "📊 ダッシュボード" }, { id: "graph", label: "📈 グラフ" }, { id: "streak", label: "🔥 ストリーク" }, { id: "roadmap", label: "🗺️ ロードマップ" }].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, padding: "6px 0", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 10, fontWeight: 800, background: tab === t.id ? "white" : "transparent", color: tab === t.id ? "#B91C1C" : "rgba(255,255,255,0.7)", transition: "all 0.2s" }}>{t.label}</button>
         ))}
       </div>
 
-      {/* ═══ CONTENT ═══ */}
+      {/* CONTENT */}
       {tab === "dashboard" && (
         <>
           <div style={{ flexShrink: 0, padding: "8px 8px 0", background: "#B91C1C" }}>
             <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-              <LevelCard tl={levels.swing} label="素振り" icon="💥" total={Object.values(data).reduce((s, e) => s + (e.swings || 0), 0)} unit="回" monthTotal={tSw} streakDays={swStreak} color="#3B82F6" nextIn={swNextIn} />
-              <LevelCard tl={levels.pitch} label="投球" icon="⚾" total={Object.values(data).reduce((s, e) => s + (e.pitches || 0), 0)} unit="球" monthTotal={tPi} streakDays={piStreak} color="#DC2626" nextIn={piNextIn} />
+              <LevelCard tl={levels.swing} label="素振り" icon="💥" total={totalSwings} unit="回" monthTotal={tSw} streakDays={swStreak} color="#3B82F6" nextIn={swNextIn} />
+              <LevelCard tl={levels.pitch} label="投球" icon="⚾" total={totalPitches} unit="球" monthTotal={tPi} streakDays={piStreak} color="#DC2626" nextIn={piNextIn} />
             </div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+            <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
               <div style={{ flex: 1, background: "linear-gradient(135deg, #1E3A8A, #1D4ED8)", borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ fontSize: 20 }}>💥</div>
-                <div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>素振り 次のレベルまで</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: "#FCD34D", lineHeight: 1.1 }}>あと{swNextIn}日！</div>
-                </div>
+                <div><div style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>素振り 次のレベルまで</div><div style={{ fontSize: 18, fontWeight: 900, color: "#FCD34D", lineHeight: 1.1 }}>あと{swNextIn}日！</div></div>
               </div>
               <div style={{ flex: 1, background: "linear-gradient(135deg, #991B1B, #DC2626)", borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ fontSize: 20 }}>⚾</div>
-                <div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>ピッチング 次のレベルまで</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: "#FCD34D", lineHeight: 1.1 }}>あと{piNextIn}日！</div>
-                </div>
+                <div><div style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>ピッチング 次のレベルまで</div><div style={{ fontSize: 18, fontWeight: 900, color: "#FCD34D", lineHeight: 1.1 }}>あと{piNextIn}日！</div></div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-              <div style={{ background: "white", borderRadius: 14, padding: "8px 6px", flex: 1, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center" }}>
-                <div style={{ fontSize: 18 }}>🎯</div>
-                <div style={{ fontSize: 9, fontWeight: 800, color: "#1E3A5F" }}>バッセン</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#10B981", lineHeight: 1 }}>{fmtAvg(bcA)}</div>
-                <div style={{ fontSize: 8, color: "#9CA3AF" }}>打率</div>
-              </div>
-              <div style={{ background: "white", borderRadius: 14, padding: "8px 6px", flex: 1, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center" }}>
-                <div style={{ fontSize: 18 }}>🏟️</div>
-                <div style={{ fontSize: 9, fontWeight: 800, color: "#1E3A5F" }}>試合</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#F59E0B", lineHeight: 1 }}>{fmtAvg(gmA)}</div>
-                <div style={{ fontSize: 8, color: "#9CA3AF" }}>打率</div>
-              </div>
-              <div style={{ background: "linear-gradient(135deg, #FFFBEB, #FEF3C7)", borderRadius: 14, padding: "8px 6px", flex: 1, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center" }}>
-                <div style={{ fontSize: 18 }}>⭐</div>
-                <div style={{ fontSize: 9, fontWeight: 800, color: "#92400E" }}>{month.month}月の星</div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: "#D97706", lineHeight: 1 }}>{monthStars}</div>
-              </div>
+              <div style={{ background: "white", borderRadius: 14, padding: "8px 6px", flex: 1, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center" }}><div style={{ fontSize: 18 }}>🎯</div><div style={{ fontSize: 9, fontWeight: 800, color: "#1E3A5F" }}>バッセン</div><div style={{ fontSize: 18, fontWeight: 900, color: "#10B981", lineHeight: 1 }}>{fmtAvg(bcA)}</div><div style={{ fontSize: 8, color: "#9CA3AF" }}>打率</div></div>
+              <div style={{ background: "white", borderRadius: 14, padding: "8px 6px", flex: 1, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center" }}><div style={{ fontSize: 18 }}>🏟️</div><div style={{ fontSize: 9, fontWeight: 800, color: "#1E3A5F" }}>試合</div><div style={{ fontSize: 18, fontWeight: 900, color: "#F59E0B", lineHeight: 1 }}>{fmtAvg(gmA)}</div><div style={{ fontSize: 8, color: "#9CA3AF" }}>打率</div></div>
+              <div style={{ background: "linear-gradient(135deg, #FFFBEB, #FEF3C7)", borderRadius: 14, padding: "8px 6px", flex: 1, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center" }}><div style={{ fontSize: 18 }}>⭐</div><div style={{ fontSize: 9, fontWeight: 800, color: "#92400E" }}>{month.month}月の星</div><div style={{ fontSize: 24, fontWeight: 900, color: "#D97706", lineHeight: 1 }}>{monthStars}</div></div>
               <div style={{ display: "flex", flexDirection: "column", gap: 4, justifyContent: "center" }}>
-                <div style={{ background: "white", borderRadius: 10, padding: "4px 6px", display: "flex", alignItems: "center", gap: 4, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-                  <div style={{ position: "relative" }}>
-                    <Ring value={dSw} max={dim} color="#3B82F6" />
-                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 900, color: "#3B82F6" }}>
-                      {Math.round(dSw / dim * 100)}%
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 8, fontWeight: 800, color: "#1E3A5F" }}>{dSw}/{dim}</div>
-                </div>
-                <div style={{ background: "white", borderRadius: 10, padding: "4px 6px", display: "flex", alignItems: "center", gap: 4, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-                  <div style={{ position: "relative" }}>
-                    <Ring value={dPi} max={dim} color="#DC2626" />
-                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 900, color: "#DC2626" }}>
-                      {Math.round(dPi / dim * 100)}%
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 8, fontWeight: 800, color: "#1E3A5F" }}>{dPi}/{dim}</div>
-                </div>
+                <div style={{ background: "white", borderRadius: 10, padding: "4px 6px", display: "flex", alignItems: "center", gap: 4, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}><div style={{ position: "relative" }}><Ring value={dSw} max={dim} color="#3B82F6" /><div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 900, color: "#3B82F6" }}>{Math.round(dSw / dim * 100)}%</div></div><div style={{ fontSize: 8, fontWeight: 800, color: "#1E3A5F" }}>{dSw}/{dim}</div></div>
+                <div style={{ background: "white", borderRadius: 10, padding: "4px 6px", display: "flex", alignItems: "center", gap: 4, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}><div style={{ position: "relative" }}><Ring value={dPi} max={dim} color="#DC2626" /><div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 900, color: "#DC2626" }}>{Math.round(dPi / dim * 100)}%</div></div><div style={{ fontSize: 8, fontWeight: 800, color: "#1E3A5F" }}>{dPi}/{dim}</div></div>
               </div>
             </div>
           </div>
-
           <div style={{ flexShrink: 0, padding: "4px 0 6px", background: "#B91C1C" }}>
-            <div style={{ padding: "0 8px 4px" }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "#FFFFFF" }}>📅 練習カレンダー</div>
-            </div>
-            <div ref={scrollRef} style={{
-              display: "flex", gap: 6, overflowX: "auto", WebkitOverflowScrolling: "touch",
-              padding: "0 8px 4px", scrollbarWidth: "none", msOverflowStyle: "none"
-            }}>
-              {Array.from({ length: dim }, (_, i) => {
-                const d = i + 1;
-                const key = fmtD(month.year, month.month, d);
-                const dow = new Date(month.year, month.month - 1, d).getDay();
-                return (
-                  <DayCard
-                    key={key} dateKey={key} dayNum={d} dow={dow}
-                    entry={data[key]} isSelected={selectedDay === d}
-                    onSelect={() => setSelectedDay(d)}
-                  />
-                );
-              })}
+            <div style={{ padding: "0 8px 4px" }}><div style={{ fontSize: 11, fontWeight: 800, color: "#FFFFFF" }}>📅 練習カレンダー</div></div>
+            <div ref={scrollRef} style={{ display: "flex", gap: 6, overflowX: "auto", WebkitOverflowScrolling: "touch", padding: "0 8px 4px", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+              {Array.from({ length: dim }, (_, i) => { const d = i + 1; const key = fmtD(month.year, month.month, d); const dow = new Date(month.year, month.month - 1, d).getDay(); return <DayCard key={key} dateKey={key} dayNum={d} dow={dow} entry={data[key]} isSelected={selectedDay === d} onSelect={() => setSelectedDay(d)} />; })}
             </div>
           </div>
-
-          <InputPanel
-            dateKey={selKey} dayNum={selectedDay} dow={selDow}
-            entry={data[selKey]} onUpdate={upd}
-            month={month} data={data}
-          />
+          <InputPanel dateKey={selKey} dayNum={selectedDay} dow={selDow} entry={data[selKey]} onUpdate={upd} month={month} data={data} />
         </>
       )}
-
-      {tab === "graph" && (
-        <GraphView data={data} month={month} />
-      )}
-
-{tab === "streak" && <StreakView data={data} month={month} />}     
-{tab === "roadmap" && (
-        <RoadmapView levels={levels} data={data} />
-      )}
+      {tab === "graph" && <GraphView data={data} month={month} />}
+      {tab === "streak" && <StreakView data={data} month={month} />}
+      {tab === "roadmap" && <RoadmapView levels={levels} data={data} />}
     </div>
   );
 }
